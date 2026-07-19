@@ -34,7 +34,9 @@ const DEFAULTS = {
 async function getTemplateImages(): Promise<TemplateImages> {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
     const res = await fetch(`${backendUrl}/store/template-images`, {
+      headers: { "x-publishable-api-key": publishableKey },
       next: { revalidate: 60 },
     })
     if (!res.ok) return {

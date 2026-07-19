@@ -377,31 +377,29 @@ const TemplateImagesPage = () => {
             custom image to replace them.
           </Text>
         </div>
-        <div className="flex items-center gap-2">
-          {isDirty && (
-            <>
-              <Badge color="orange" size="2xsmall">
-                Unsaved changes
-              </Badge>
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={handleDiscard}
-                disabled={saveMutation.isPending}
-              >
-                Discard
-              </Button>
-            </>
-          )}
-          <Button
-            size="small"
-            onClick={handleSave}
-            disabled={!isDirty || saveMutation.isPending}
-            isLoading={saveMutation.isPending}
-          >
-            Save changes
-          </Button>
-        </div>
+        {isDirty && (
+          <div className="flex items-center gap-2">
+            <Badge color="orange" size="2xsmall">
+              Unsaved changes
+            </Badge>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={handleDiscard}
+              disabled={saveMutation.isPending}
+            >
+              Discard
+            </Button>
+            <Button
+              size="small"
+              onClick={handleSave}
+              isLoading={saveMutation.isPending}
+              disabled={saveMutation.isPending}
+            >
+              Save changes
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Homepage — Hero */}

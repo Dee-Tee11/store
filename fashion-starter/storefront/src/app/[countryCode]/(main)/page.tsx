@@ -20,7 +20,9 @@ interface TemplateImages {
 async function getTemplateImages(): Promise<TemplateImages> {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
     const res = await fetch(`${backendUrl}/store/template-images`, {
+      headers: { "x-publishable-api-key": publishableKey },
       next: { revalidate: 60 }, // cache for 60s, stays fresh without full rebuild
     })
     if (!res.ok) return { hero_image: null, about_image: null }
@@ -123,13 +125,14 @@ export default async function Home({
 
   return (
     <>
-      <div className="max-md:pt-18">
+      <div className="max-md:pt-18 w-full">
         <Image
           src={heroImageSrc}
           width={2880}
           height={1500}
+          priority
           alt="Living room with gray armchair and two-seater sofa"
-          className="md:h-screen md:object-cover"
+          className="w-full h-auto"
           unoptimized={!heroImageSrc.startsWith("/")}
         />
       </div>

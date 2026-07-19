@@ -14,11 +14,50 @@ const getFileBase64EncodedContent = (file: File) => {
   });
 };
 
+// ---------------------------------------------------------------------------
+// Normalize EXIF orientation: bakes the correct rotation into the pixels
+// and strips the orientation metadata, so it displays correctly everywhere
+// regardless of how the backend/storage serves the file afterwards.
+// ---------------------------------------------------------------------------
+const normalizeImageOrientation = async (file: File): Promise<File> => {
+  try {
+    const bitmap = await createImageBitmap(file, {
+      imageOrientation: 'from-image',
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, file.type || 'image/jpeg', 0.92),
+    );
+
+    if (!blob) return file;
+
+    return new File([blob], file.name, {
+      type: file.type || 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } catch {
+    // If the browser doesn't support this (very old browsers), fall back
+    // to the original file rather than blocking the upload.
+    return file;
+  }
+};
+
 const createPayload = async (payload: HttpTypes.AdminUploadFile) => {
   if (payload instanceof FileList) {
     const formData = new FormData();
     for (const file of payload) {
-      formData.append('files', file);
+      const normalized = await normalizeImageOrientation(file);
+      formData.append('files', normalized);
     }
     return formData;
   }
@@ -26,7 +65,8 @@ const createPayload = async (payload: HttpTypes.AdminUploadFile) => {
   if (payload.files.every((f) => f instanceof File)) {
     const formData = new FormData();
     for (const file of payload.files) {
-      formData.append('files', file);
+      const normalized = await normalizeImageOrientation(file as File);
+      formData.append('files', normalized);
     }
     return formData;
   }
@@ -42,9 +82,10 @@ const createPayload = async (payload: HttpTypes.AdminUploadFile) => {
 
   for (const file of payload.files) {
     if (file instanceof File) {
+      const normalized = await normalizeImageOrientation(file);
       obj.files.push({
-        name: file.name,
-        content: await getFileBase64EncodedContent(file),
+        name: normalized.name,
+        content: await getFileBase64EncodedContent(normalized),
       });
     } else {
       obj.files.push(file);
