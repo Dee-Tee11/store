@@ -55,7 +55,7 @@ const Review = ({ cart }: { cart: StoreCart }) => {
           <p className="mb-8">
             By clicking the Place Order button, you confirm that you have read,
             understand and accept our Terms of Use, Terms of Sale and Returns
-            Policy and acknowledge that you have read Medusa Store&apos;s
+            Policy and acknowledge that you have read South Store&apos;s
             Privacy Policy.
           </p>
           <PaymentButton

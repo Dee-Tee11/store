@@ -2,35 +2,12 @@ import { Metadata } from "next"
 import Image from "next/image"
 import { getRegion } from "@lib/data/regions"
 import { getProductTypesList } from "@lib/data/product-types"
+import {
+  getTemplateImages,
+  isExternalImage,
+} from "@lib/data/template-images"
 import { Layout, LayoutColumn } from "@/components/Layout"
 import { LocalizedLink } from "@/components/LocalizedLink"
-import { CollectionsSection } from "@/components/CollectionsSection"
-
-// ---------------------------------------------------------------------------
-// Default images (static fallbacks)
-// ---------------------------------------------------------------------------
-const DEFAULT_HERO_IMAGE = "/images/content/living-room-gray-armchair-two-seater-sofa.png"
-const DEFAULT_ABOUT_IMAGE = "/images/content/gray-sofa-against-concrete-wall.png"
-
-interface TemplateImages {
-  hero_image: { id: string; url: string } | null
-  about_image: { id: string; url: string } | null
-}
-
-async function getTemplateImages(): Promise<TemplateImages> {
-  try {
-    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
-    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
-    const res = await fetch(`${backendUrl}/store/template-images`, {
-      headers: { "x-publishable-api-key": publishableKey },
-      next: { revalidate: 60 }, // cache for 60s, stays fresh without full rebuild
-    })
-    if (!res.ok) return { hero_image: null, about_image: null }
-    return res.json()
-  } catch {
-    return { hero_image: null, about_image: null }
-  }
-}
 
 export const metadata: Metadata = {
   title: "South Store",
@@ -119,9 +96,9 @@ export default async function Home({
     return null
   }
 
-  const templateImages = await getTemplateImages()
-  const heroImageSrc = templateImages.hero_image?.url ?? DEFAULT_HERO_IMAGE
-  const aboutImageSrc = templateImages.about_image?.url ?? DEFAULT_ABOUT_IMAGE
+  const images = await getTemplateImages()
+  const heroImageSrc = images.hero_image
+  const aboutImageSrc = images.about_image
 
   return (
     <>
@@ -131,9 +108,9 @@ export default async function Home({
           width={2880}
           height={1500}
           priority
-          alt="Living room with gray armchair and two-seater sofa"
+          alt="South Store"
           className="w-full h-auto"
-          unoptimized={!heroImageSrc.startsWith("/")}
+          unoptimized={isExternalImage(heroImageSrc)}
         />
       </div>
       <div className="pt-8 pb-26 md:pt-26 md:pb-36">
@@ -155,7 +132,6 @@ export default async function Home({
           </LayoutColumn>
         </Layout>
         <CategoriesSection />
-        <CollectionsSection className="mb-22 md:mb-36" />
         <Layout>
           <LayoutColumn className="col-span-full">
             <h3 className="text-md md:text-2xl mb-8 md:mb-16">
@@ -165,9 +141,9 @@ export default async function Home({
               src={aboutImageSrc}
               width={2496}
               height={1400}
-              alt="Gray sofa against concrete wall"
+              alt="About South Store"
               className="mb-8 md:mb-16 max-md:aspect-[3/2] max-md:object-cover"
-              unoptimized={!aboutImageSrc.startsWith("/")}
+              unoptimized={isExternalImage(aboutImageSrc)}
             />
           </LayoutColumn>
           <LayoutColumn start={1} end={{ base: 13, md: 7 }}>

@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { TEMPLATE_IMAGE_DEFAULTS } from "@lib/data/template-images"
 import { LocalizedLink } from "@/components/LocalizedLink"
 import { Input } from "@/components/Forms"
 import { SubmitButton } from "@modules/common/components/submit-button"
@@ -7,10 +8,10 @@ export default function RegisterLoadingPage() {
   return (
     <div className="flex min-h-screen">
       <Image
-        src="/images/content/living-room-dark-gray-corner-sofa-coffee-table.png"
+        src={TEMPLATE_IMAGE_DEFAULTS.auth_image}
         width={1440}
         height={1632}
-        alt="Living room with dark gray corner sofa and coffee table"
+        alt="South Store"
         className="max-lg:hidden lg:w-1/2 shrink-0 object-cover"
       />
       <div className="shrink-0 max-w-100 lg:max-w-96 w-full mx-auto pt-30 lg:pt-37 pb-16 max-sm:px-4">

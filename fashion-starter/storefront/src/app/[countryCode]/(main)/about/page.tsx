@@ -2,6 +2,10 @@ import { Metadata } from "next"
 import Image from "next/image"
 import { StoreRegion } from "@medusajs/types"
 import { listRegions } from "@lib/data/regions"
+import {
+  getTemplateImages,
+  isExternalImage,
+} from "@lib/data/template-images"
 import { Layout, LayoutColumn } from "@/components/Layout"
 
 export const metadata: Metadata = {
@@ -30,115 +34,112 @@ export async function generateStaticParams() {
   return staticParams
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const images = await getTemplateImages()
+
   return (
     <>
       <div className="max-md:pt-18">
         <Image
-          src="/images/content/living-room-gray-three-seater-sofa.png"
+          src={images.about_page_hero}
           width={2880}
           height={1500}
-          alt="Living room with gray three-seater sofa"
+          alt="South Store"
           className="md:h-screen md:object-cover"
+          unoptimized={isExternalImage(images.about_page_hero)}
         />
       </div>
       <div className="pt-8 md:pt-26 pb-26 md:pb-36">
         <Layout>
           <LayoutColumn start={1} end={{ base: 13, lg: 7 }}>
             <h3 className="text-md max-lg:mb-6 md:text-2xl">
-              At South Store, we believe that a sofa is the heart of every
-              home.
+              South Store brings the brands you actually want into one place.
             </h3>
           </LayoutColumn>
           <LayoutColumn start={{ base: 1, lg: 8 }} end={13}>
             <div className="md:text-md lg:mt-18">
               <p className="mb-5 lg:mb-9">
-                Welcome to South Store, where we believe that comfort and style
-                should be effortlessly intertwined. Our mission is to help you
-                create beautiful, functional spaces that bring warmth and
-                relaxation into your home.
+                Welcome to South Store. We sell technology, fragrances and
+                fashion &mdash; from the latest Apple devices and JBL speakers
+                to Dyson hair care, perfumes and clothing from the labels people
+                are actually looking for.
               </p>
               <p>
-                Every piece in our collection is designed with care, blending
-                timeless craftsmanship with modern aesthetics to offer you the
-                perfect balance between form and function.
+                Instead of an endless catalogue, we keep a focused selection.
+                Everything we list is something we would recommend to a friend,
+                at a price that makes sense.
               </p>
             </div>
           </LayoutColumn>
           <LayoutColumn>
             <Image
-              src="/images/content/living-room-black-armchair-dark-gray-sofa.png"
+              src={images.about_page_image1}
               width={2496}
               height={1404}
-              alt="Living room with black armchair and dark gray sofa"
+              alt="South Store products"
               className="mt-26 lg:mt-36 mb-8 lg:mb-26"
+              unoptimized={isExternalImage(images.about_page_image1)}
             />
           </LayoutColumn>
           <LayoutColumn start={1} end={{ base: 13, lg: 8 }}>
             <h3 className="text-md lg:mb-10 mb-6 md:text-2xl">
-              We are here to make your living space a true reflection of your
-              personal style.
+              Every product we list is chosen, not just stocked.
             </h3>
           </LayoutColumn>
           <LayoutColumn start={1} end={{ base: 13, lg: 6 }}>
             <div className="mb-16 lg:mb-26">
               <p className="mb-5 md:mb-9">
-                At the heart of our brand is a deep commitment to quality. We
-                understand that a sofa isn&apos;t just another piece of
-                furniture; it&apos;s where you unwind, gather with loved ones,
-                and make memories. That&apos;s why we source only the finest
-                materials and fabrics, ensuring that every sofa we offer is
-                built to last.
+                Our range is built around a few clear categories: consumer
+                technology, audio, personal care, fragrances and clothing. We
+                work with trusted suppliers and check what we receive before it
+                reaches you, so what you order is what shows up at your door.
               </p>
               <p>
-                From luxurious leathers and soft linens to high-performance
-                textiles, each fabric is carefully selected for its durability
-                and beauty. Our attention to detail extends to every stitch and
-                seam, guaranteeing that your sofa will not only look stunning
-                but will also withstand the test of time.
+                We&apos;d rather carry fewer references and know each one well
+                than list thousands of products we can&apos;t stand behind. If
+                something isn&apos;t up to standard, it doesn&apos;t make it
+                into the store.
               </p>
             </div>
           </LayoutColumn>
           <LayoutColumn start={{ base: 2, lg: 1 }} end={{ base: 12, lg: 7 }}>
             <Image
-              src="/images/content/gray-one-seater-sofa-wooden-coffee-table.png"
+              src={images.about_page_image2}
               width={1200}
               height={1600}
-              alt="Gray one-seater sofa and wooden coffee table"
+              alt="South Store selection"
               className="mb-16 lg:mb-46"
+              unoptimized={isExternalImage(images.about_page_image2)}
             />
           </LayoutColumn>
           <LayoutColumn start={{ base: 1, lg: 8 }} end={13}>
             <div className="mb-6 lg:mb-20 xl:mb-36">
               <p>
-                Our design philosophy revolves around creating pieces that are
-                both beautiful and practical. Inspired by Scandinavian
-                simplicity, modern luxury, and timeless classics, our
-                collections are curated to suit a wide variety of tastes and
-                lifestyles. We understand that every home is different, so we
-                offer a diverse range of styles, colors, and textures to help
-                you find the perfect fit. Whether you prefer sleek modern lines
-                or soft, inviting silhouettes, we have something to suit every
-                space and personality.
+                Tastes differ, so our selection spans the practical and the
+                indulgent: a phone or a pair of headphones you&apos;ll use every
+                day, a fragrance for a specific occasion, a piece of clothing
+                you&apos;ll keep for years. Whether you know exactly what
+                you&apos;re after or you&apos;re still browsing, the aim is the
+                same &mdash; make it easy to find the right thing without
+                digging through noise.
               </p>
             </div>
             <div className="md:text-md max-lg:mb-26">
               <p>
-                We believe that great design should be environmentally
-                conscious, which is why we strive to minimise our environmental
-                footprint through responsible sourcing and production practices.
-                Our commitment to sustainability ensures that our products are
-                not only beautiful but also kind to the planet.
+                We ship across Europe, with clear pricing and no surprises at
+                checkout. Shipping costs and delivery times are shown before you
+                pay, and our team is reachable if anything needs sorting out.
               </p>
             </div>
           </LayoutColumn>
         </Layout>
         <Image
-          src="/images/content/living-room-gray-three-seater-puffy-sofa.png"
+          src={images.about_page_wide}
           width={2880}
           height={1618}
-          alt="Living room with gray three-seater puffy sofa"
+          alt="South Store"
           className="mb-8 lg:mb-26"
+          unoptimized={isExternalImage(images.about_page_wide)}
         />
         <Layout>
           <LayoutColumn start={1} end={{ base: 13, lg: 7 }}>
@@ -154,10 +155,9 @@ export default function AboutPage() {
                 you&apos;re looking for.
               </p>
               <p>
-                We&apos;re not just selling sofas - we&apos;re helping you
-                create spaces where you can relax, recharge, and make lasting
-                memories. Thank you for choosing South Store to be a part of
-                your home!
+                From the first question to the moment your order arrives, we
+                want the experience to be straightforward. Thank you for
+                choosing South Store!
               </p>
             </div>
           </LayoutColumn>

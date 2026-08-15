@@ -11,6 +11,7 @@ import { Layout, LayoutColumn } from "@/components/Layout"
 import { getCategoriesList } from "@lib/data/categories"
 import { getProductTypesList } from "@lib/data/product-types"
 import { getRegion } from "@lib/data/regions"
+import { getTemplateImages } from "@lib/data/template-images"
 
 export default async function CollectionTemplate({
   sortBy,
@@ -33,10 +34,11 @@ export default async function CollectionTemplate({
     collection.metadata ?? {}
   )
 
-  const [categories, types, region] = await Promise.all([
+  const [categories, types, region, templateImages] = await Promise.all([
     getCategoriesList(0, 100, ["id", "name", "handle"]),
     getProductTypesList(0, 100, ["id", "value"]),
     getRegion(countryCode),
+    getTemplateImages(),
   ])
 
   return (
@@ -45,7 +47,7 @@ export default async function CollectionTemplate({
         <Image
           src={
             collectionDetails.data?.collection_page_image?.url ||
-            "/images/content/living-room-gray-two-seater-puffy-sofa.png"
+            templateImages.collection_default_image
           }
           fill
           alt={collection.title + " image"}

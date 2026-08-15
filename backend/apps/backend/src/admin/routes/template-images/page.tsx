@@ -23,27 +23,158 @@ interface ImageValue {
   url: string;
 }
 
+interface SlotDefinition {
+  key: string;
+  label: string;
+  description: string;
+  recommendation: string;
+}
+
+interface SectionDefinition {
+  title: string;
+  badge: { label: string; color: 'blue' | 'green' | 'purple' | 'orange' };
+  slots: SlotDefinition[];
+  /** Render the slots side by side instead of stacked. */
+  grid?: boolean;
+}
+
+// The single source of truth for this page — keep the keys in sync with
+// src/api/shared/template-images.ts and the storefront.
+const SECTIONS: SectionDefinition[] = [
+  {
+    title: 'Homepage',
+    badge: { label: 'Home', color: 'blue' },
+    slots: [
+      {
+        key: 'hero_image',
+        label: 'Hero Banner',
+        description: 'Full-screen hero image displayed at the top of the homepage.',
+        recommendation: '2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'about_image',
+        label: 'About Image',
+        description: 'Wide image displayed in the "About" section on the homepage.',
+        recommendation: '2496 × 1400 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+    ],
+  },
+  {
+    title: 'About Page',
+    badge: { label: 'Content', color: 'green' },
+    slots: [
+      {
+        key: 'about_page_hero',
+        label: 'Hero Banner',
+        description: 'Full-screen image at the top of the About page.',
+        recommendation: '2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'about_page_image1',
+        label: 'Wide Image',
+        description: 'Wide image below the opening paragraphs.',
+        recommendation: '2496 × 1404 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'about_page_image2',
+        label: 'Portrait Image',
+        description: 'Tall image in the middle of the page.',
+        recommendation: '1200 × 1600 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'about_page_wide',
+        label: 'Closing Banner',
+        description: 'Wide image near the bottom of the About page.',
+        recommendation: '2880 × 1618 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+    ],
+  },
+  {
+    title: 'Brands Page',
+    badge: { label: 'Brands', color: 'purple' },
+    slots: [
+      {
+        key: 'brands_hero_image',
+        label: 'Hero Banner',
+        description: 'Full-screen image at the top of the Brands page.',
+        recommendation: '2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'brands_section1_wide',
+        label: 'Section 1 Wide Banner',
+        description: 'Wide image in the middle of the page.',
+        recommendation: '2496 × 1404 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'brands_section2_wide',
+        label: 'Section 2 Wide Banner',
+        description: 'Wide image in the lower part of the page.',
+        recommendation: '2880 × 1618 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+    ],
+  },
+  {
+    title: 'Brand Cards',
+    badge: { label: 'Brands', color: 'purple' },
+    grid: true,
+    slots: [
+      {
+        key: 'brands_brand1_image',
+        label: 'Card 1 — Apple',
+        description: 'Thumbnail for the first brand card (Apple section).',
+        recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'brands_brand2_image',
+        label: 'Card 2 — JBL',
+        description: 'Thumbnail for the second brand card (audio section).',
+        recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'brands_brand3_image',
+        label: 'Card 3 — Dyson',
+        description: 'Thumbnail for the third brand card (personal care section).',
+        recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'brands_brand4_image',
+        label: 'Card 4 — Perfumes',
+        description: 'Thumbnail for the fourth brand card (fragrances section).',
+        recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+    ],
+  },
+  {
+    title: 'Shared',
+    badge: { label: 'Site-wide', color: 'orange' },
+    grid: true,
+    slots: [
+      {
+        key: 'auth_image',
+        label: 'Account Pages',
+        description: 'Side image on the login, register and password reset pages.',
+        recommendation: '1440 × 1632 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+      {
+        key: 'collection_default_image',
+        label: 'Collection Fallback',
+        description:
+          'Header image used by collections that have no image of their own.',
+        recommendation: '2880 × 1440 recommended · JPG, PNG, WebP · up to 10 MB',
+      },
+    ],
+  },
+];
+
+const SLOT_KEYS = SECTIONS.flatMap((section) =>
+  section.slots.map((slot) => slot.key),
+);
+
+type ImageMap = Record<string, ImageValue | null>;
+
 interface TemplateImagesData {
-  hero_image: ImageValue | null;
-  about_image: ImageValue | null;
-  inspiration_hero_image: ImageValue | null;
-  inspiration_section1_wide: ImageValue | null;
-  inspiration_section2_wide: ImageValue | null;
-  inspiration_astrid_curve: ImageValue | null;
-  inspiration_nordic_haven: ImageValue | null;
-  inspiration_nordic_breeze: ImageValue | null;
-  inspiration_oslo_drift: ImageValue | null;
-  defaults?: {
-    hero_image: ImageValue;
-    about_image: ImageValue;
-    inspiration_hero_image: ImageValue;
-    inspiration_section1_wide: ImageValue;
-    inspiration_section2_wide: ImageValue;
-    inspiration_astrid_curve: ImageValue;
-    inspiration_nordic_haven: ImageValue;
-    inspiration_nordic_breeze: ImageValue;
-    inspiration_oslo_drift: ImageValue;
-  };
+  images: ImageMap;
+  defaults: ImageMap;
 }
 
 // Default image IDs so we know when an image is the site default
@@ -120,9 +251,9 @@ const ImageSlot: React.FC<ImageSlotProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0 flex-1 basis-64">
+          <div className="flex flex-wrap items-center gap-2">
             <Text size="base" weight="plus" className="text-fg-base">
               {label}
             </Text>
@@ -141,13 +272,14 @@ const ImageSlot: React.FC<ImageSlotProps> = ({
             {description}
           </Text>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {!isDefaultImage && (
             <Button
               variant="secondary"
               size="small"
               onClick={onReset}
               disabled={isUploading}
+              className="whitespace-nowrap"
             >
               <ArrowPath />
               Reset to default
@@ -159,6 +291,7 @@ const ImageSlot: React.FC<ImageSlotProps> = ({
               size="small"
               onClick={() => inputRef.current?.click()}
               disabled={isUploading}
+              className="whitespace-nowrap"
             >
               Replace
             </Button>
@@ -169,6 +302,7 @@ const ImageSlot: React.FC<ImageSlotProps> = ({
               size="small"
               onClick={onRemove}
               disabled={isUploading}
+              className="whitespace-nowrap"
             >
               Remove
             </Button>
@@ -252,31 +386,31 @@ const ImageSlot: React.FC<ImageSlotProps> = ({
 
 const TemplateImagesPage = () => {
   const queryClient = useQueryClient();
-  const [draft, setDraft] = React.useState<Partial<TemplateImagesData>>({});
+  const [draft, setDraft] = React.useState<ImageMap>({});
   const [uploadingSlot, setUploadingSlot] = React.useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<TemplateImagesData>({
     queryKey: ['template-images'],
     queryFn: () =>
-      fetch('/admin/template-images', { credentials: 'include' }).then((r) =>
-        r.json(),
-      ),
+      fetch('/admin/template-images', { credentials: 'include' })
+        .then((r) => r.json())
+        .then((json) => ({
+          images: Object.fromEntries(
+            SLOT_KEYS.map((key) => [key, json[key] ?? null]),
+          ) as ImageMap,
+          defaults: (json.defaults ?? {}) as ImageMap,
+        })),
   });
 
   // Merge saved data with local draft
-  const merged: TemplateImagesData = React.useMemo(
-    () => ({
-      hero_image: draft.hero_image !== undefined ? draft.hero_image : (data?.hero_image ?? null),
-      about_image: draft.about_image !== undefined ? draft.about_image : (data?.about_image ?? null),
-      inspiration_hero_image: draft.inspiration_hero_image !== undefined ? draft.inspiration_hero_image : (data?.inspiration_hero_image ?? null),
-      inspiration_section1_wide: draft.inspiration_section1_wide !== undefined ? draft.inspiration_section1_wide : (data?.inspiration_section1_wide ?? null),
-      inspiration_section2_wide: draft.inspiration_section2_wide !== undefined ? draft.inspiration_section2_wide : (data?.inspiration_section2_wide ?? null),
-      inspiration_astrid_curve: draft.inspiration_astrid_curve !== undefined ? draft.inspiration_astrid_curve : (data?.inspiration_astrid_curve ?? null),
-      inspiration_nordic_haven: draft.inspiration_nordic_haven !== undefined ? draft.inspiration_nordic_haven : (data?.inspiration_nordic_haven ?? null),
-      inspiration_nordic_breeze: draft.inspiration_nordic_breeze !== undefined ? draft.inspiration_nordic_breeze : (data?.inspiration_nordic_breeze ?? null),
-      inspiration_oslo_drift: draft.inspiration_oslo_drift !== undefined ? draft.inspiration_oslo_drift : (data?.inspiration_oslo_drift ?? null),
-      defaults: data?.defaults,
-    }),
+  const merged: ImageMap = React.useMemo(
+    () =>
+      Object.fromEntries(
+        SLOT_KEYS.map((key) => [
+          key,
+          draft[key] !== undefined ? draft[key] : (data?.images[key] ?? null),
+        ]),
+      ),
     [data, draft],
   );
 
@@ -285,7 +419,7 @@ const TemplateImagesPage = () => {
   const uploadImage = useAdminUploadImage();
 
   const handleUpload =
-    (slot: keyof Omit<TemplateImagesData, 'defaults'>) =>
+    (slot: string) =>
     async (file: File) => {
       setUploadingSlot(slot);
       try {
@@ -304,35 +438,29 @@ const TemplateImagesPage = () => {
       }
     };
 
-  const handleRemove =
-    (slot: keyof Omit<TemplateImagesData, 'defaults'>) => () => {
-      setDraft((prev) => ({ ...prev, [slot]: null }));
-    };
+  const handleRemove = (slot: string) => () => {
+    setDraft((prev) => ({ ...prev, [slot]: null }));
+  };
 
   // Reset to default — removes custom override so the site falls back to the static file
   const handleReset =
-    (slot: keyof Omit<TemplateImagesData, 'defaults'>) => () => {
+    (slot: string) => () => {
       setDraft((prev) => ({
         ...prev,
-        [slot]: merged.defaults?.[slot] ?? null,
+        [slot]: data?.defaults[slot] ?? null,
       }));
     };
 
   const saveMutation = useMutation({
     mutationKey: ['template-images', 'save'],
-    mutationFn: async (values: Omit<TemplateImagesData, 'defaults'>) => {
+    mutationFn: async (values: ImageMap) => {
       // Strip __default__ images — don't persist them, let the backend fall back
-      const payload = {
-        hero_image: isDefault(values.hero_image) ? null : values.hero_image,
-        about_image: isDefault(values.about_image) ? null : values.about_image,
-        inspiration_hero_image: isDefault(values.inspiration_hero_image) ? null : values.inspiration_hero_image,
-        inspiration_section1_wide: isDefault(values.inspiration_section1_wide) ? null : values.inspiration_section1_wide,
-        inspiration_section2_wide: isDefault(values.inspiration_section2_wide) ? null : values.inspiration_section2_wide,
-        inspiration_astrid_curve: isDefault(values.inspiration_astrid_curve) ? null : values.inspiration_astrid_curve,
-        inspiration_nordic_haven: isDefault(values.inspiration_nordic_haven) ? null : values.inspiration_nordic_haven,
-        inspiration_nordic_breeze: isDefault(values.inspiration_nordic_breeze) ? null : values.inspiration_nordic_breeze,
-        inspiration_oslo_drift: isDefault(values.inspiration_oslo_drift) ? null : values.inspiration_oslo_drift,
-      };
+      const payload = Object.fromEntries(
+        SLOT_KEYS.map((key) => [
+          key,
+          isDefault(values[key]) ? null : values[key],
+        ]),
+      );
       const res = await fetch('/admin/template-images', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -402,162 +530,47 @@ const TemplateImagesPage = () => {
         )}
       </div>
 
-      {/* Homepage — Hero */}
-      <Container className="p-6">
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ui-border-base">
-          <Heading level="h2">Homepage</Heading>
-          <Badge color="blue" size="2xsmall">Hero</Badge>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center gap-2 justify-center h-64 text-fg-subtle">
-            <Spinner className="animate-spin" />
-            <Text>Loading…</Text>
+      {SECTIONS.map((section) => (
+        <Container className="p-6" key={section.title}>
+          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ui-border-base">
+            <Heading level="h2">{section.title}</Heading>
+            <Badge color={section.badge.color} size="2xsmall">
+              {section.badge.label}
+            </Badge>
           </div>
-        ) : (
-          <ImageSlot
-            label="Hero Banner"
-            description="Full-screen hero image displayed at the top of the homepage."
-            recommendation="2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB"
-            value={merged.hero_image}
-            isUploading={uploadingSlot === 'hero_image'}
-            isDefault={isDefault(merged.hero_image)}
-            onUpload={handleUpload('hero_image')}
-            onRemove={handleRemove('hero_image')}
-            onReset={handleReset('hero_image')}
-          />
-        )}
-      </Container>
 
-      {/* About section */}
-      <Container className="p-6">
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ui-border-base">
-          <Heading level="h2">About Section</Heading>
-          <Badge color="green" size="2xsmall">Content</Badge>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center gap-2 justify-center h-64 text-fg-subtle">
-            <Spinner className="animate-spin" />
-            <Text>Loading…</Text>
-          </div>
-        ) : (
-          <ImageSlot
-            label="About Image"
-            description='Wide image displayed in the "About" section on the homepage.'
-            recommendation="2496 × 1400 recommended · JPG, PNG, WebP · up to 10 MB"
-            value={merged.about_image}
-            isUploading={uploadingSlot === 'about_image'}
-            isDefault={isDefault(merged.about_image)}
-            onUpload={handleUpload('about_image')}
-            onRemove={handleRemove('about_image')}
-            onReset={handleReset('about_image')}
-          />
-        )}
-      </Container>
-
-      {/* Inspiration Page */}
-      <Container className="p-6">
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ui-border-base">
-          <Heading level="h2">Inspiration Page</Heading>
-          <Badge color="purple" size="2xsmall">Inspiration</Badge>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center gap-2 justify-center h-64 text-fg-subtle">
-            <Spinner className="animate-spin" />
-            <Text>Loading…</Text>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-10">
-            <ImageSlot
-              label="Hero Banner"
-              description="Full-screen hero image displayed at the top of the inspiration page."
-              recommendation="2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB"
-              value={merged.inspiration_hero_image}
-              isUploading={uploadingSlot === 'inspiration_hero_image'}
-              isDefault={isDefault(merged.inspiration_hero_image)}
-              onUpload={handleUpload('inspiration_hero_image')}
-              onRemove={handleRemove('inspiration_hero_image')}
-              onReset={handleReset('inspiration_hero_image')}
-            />
-
-            <ImageSlot
-              label="Section 1 Wide Banner"
-              description="Wide image displayed in the middle of the page."
-              recommendation="2496 × 1404 recommended · JPG, PNG, WebP · up to 10 MB"
-              value={merged.inspiration_section1_wide}
-              isUploading={uploadingSlot === 'inspiration_section1_wide'}
-              isDefault={isDefault(merged.inspiration_section1_wide)}
-              onUpload={handleUpload('inspiration_section1_wide')}
-              onRemove={handleRemove('inspiration_section1_wide')}
-              onReset={handleReset('inspiration_section1_wide')}
-            />
-            
-            <ImageSlot
-              label="Section 2 Wide Banner"
-              description="Wide image displayed in the lower part of the page."
-              recommendation="2880 × 1618 recommended · JPG, PNG, WebP · up to 10 MB"
-              value={merged.inspiration_section2_wide}
-              isUploading={uploadingSlot === 'inspiration_section2_wide'}
-              isDefault={isDefault(merged.inspiration_section2_wide)}
-              onUpload={handleUpload('inspiration_section2_wide')}
-              onRemove={handleRemove('inspiration_section2_wide')}
-              onReset={handleReset('inspiration_section2_wide')}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t border-ui-border-base pt-10 mt-2">
-              <ImageSlot
-                label="Product: Astrid Curve"
-                description="Thumbnail image for the Astrid Curve product."
-                recommendation="768 × 572 recommended · JPG, PNG, WebP · up to 10 MB"
-                value={merged.inspiration_astrid_curve}
-                isUploading={uploadingSlot === 'inspiration_astrid_curve'}
-                isDefault={isDefault(merged.inspiration_astrid_curve)}
-                onUpload={handleUpload('inspiration_astrid_curve')}
-                onRemove={handleRemove('inspiration_astrid_curve')}
-                onReset={handleReset('inspiration_astrid_curve')}
-              />
-
-              <ImageSlot
-                label="Product: Nordic Haven"
-                description="Thumbnail image for the Nordic Haven product."
-                recommendation="768 × 572 recommended · JPG, PNG, WebP · up to 10 MB"
-                value={merged.inspiration_nordic_haven}
-                isUploading={uploadingSlot === 'inspiration_nordic_haven'}
-                isDefault={isDefault(merged.inspiration_nordic_haven)}
-                onUpload={handleUpload('inspiration_nordic_haven')}
-                onRemove={handleRemove('inspiration_nordic_haven')}
-                onReset={handleReset('inspiration_nordic_haven')}
-              />
-
-              <ImageSlot
-                label="Product: Nordic Breeze"
-                description="Thumbnail image for the Nordic Breeze product."
-                recommendation="768 × 572 recommended · JPG, PNG, WebP · up to 10 MB"
-                value={merged.inspiration_nordic_breeze}
-                isUploading={uploadingSlot === 'inspiration_nordic_breeze'}
-                isDefault={isDefault(merged.inspiration_nordic_breeze)}
-                onUpload={handleUpload('inspiration_nordic_breeze')}
-                onRemove={handleRemove('inspiration_nordic_breeze')}
-                onReset={handleReset('inspiration_nordic_breeze')}
-              />
-
-              <ImageSlot
-                label="Product: Oslo Drift"
-                description="Thumbnail image for the Oslo Drift product."
-                recommendation="768 × 572 recommended · JPG, PNG, WebP · up to 10 MB"
-                value={merged.inspiration_oslo_drift}
-                isUploading={uploadingSlot === 'inspiration_oslo_drift'}
-                isDefault={isDefault(merged.inspiration_oslo_drift)}
-                onUpload={handleUpload('inspiration_oslo_drift')}
-                onRemove={handleRemove('inspiration_oslo_drift')}
-                onReset={handleReset('inspiration_oslo_drift')}
-              />
+          {isLoading ? (
+            <div className="flex items-center gap-2 justify-center h-64 text-fg-subtle">
+              <Spinner className="animate-spin" />
+              <Text>Loading…</Text>
             </div>
-          </div>
-        )}
-      </Container>
+          ) : (
+            <div
+              className={
+                section.grid
+                  ? 'grid grid-cols-1 md:grid-cols-2 gap-10'
+                  : 'flex flex-col gap-10'
+              }
+            >
+              {section.slots.map((slot) => (
+                <ImageSlot
+                  key={slot.key}
+                  label={slot.label}
+                  description={slot.description}
+                  recommendation={slot.recommendation}
+                  value={merged[slot.key]}
+                  isUploading={uploadingSlot === slot.key}
+                  isDefault={isDefault(merged[slot.key])}
+                  onUpload={handleUpload(slot.key)}
+                  onRemove={handleRemove(slot.key)}
+                  onReset={handleReset(slot.key)}
+                />
+              ))}
+            </div>
+          )}
+        </Container>
+      ))}
+
 
       {/* Sticky save bar */}
       {isDirty && (

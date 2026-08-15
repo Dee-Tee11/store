@@ -61,10 +61,10 @@ export const HeaderDrawer: React.FC<{
                   About
                 </LocalizedLink>
                 <LocalizedLink
-                  href="/inspiration"
+                  href="/brands"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Inspiration
+                  Brands
                 </LocalizedLink>
                 <LocalizedLink
                   href="/store"

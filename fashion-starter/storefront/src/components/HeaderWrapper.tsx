@@ -16,7 +16,7 @@ export const HeaderWrapper: React.FC<{ children?: React.ReactNode }> = ({
     !currentPath ||
     currentPath === "/" ||
     currentPath === "/about" ||
-    currentPath === "/inspiration" ||
+    currentPath === "/brands" ||
     currentPath.startsWith("/collections")
   const isAlwaysSticky =
     currentPath.startsWith("/auth") || currentPath.startsWith("/account")

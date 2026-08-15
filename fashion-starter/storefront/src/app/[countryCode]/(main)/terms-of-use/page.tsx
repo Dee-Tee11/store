@@ -54,8 +54,8 @@ export default function TermsOfUsePage() {
         <h2>1. Terms of Use:</h2>
         <p>
           All content and materials on our website, including text, graphics,
-          logos, images, videos, and trademarks, are the property of Sofa
-          Society or its licensors and are protected by intellectual property
+          logos, images, videos, and trademarks, are the property of South
+          Store or its licensors and are protected by intellectual property
           laws. You may not use, reproduce, modify, or distribute any of our
           content without our prior written permission.
         </p>
