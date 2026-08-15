@@ -15,6 +15,7 @@ export interface DrawerProps
 export const Drawer: React.FC<DrawerProps> = ({
   colorScheme = "dark",
   animateFrom,
+  animateDistance = "full",
   className,
   children,
   ...rest
@@ -23,6 +24,7 @@ export const Drawer: React.FC<DrawerProps> = ({
     <UiModalOverlay {...rest}>
       <UiModal
         animateFrom={animateFrom}
+        animateDistance={animateDistance}
         className={twMerge(
           "flex justify-self-center overflow-y-scroll max-h-screen h-screen max-w-75 rounded-none",
           colorScheme === "light"

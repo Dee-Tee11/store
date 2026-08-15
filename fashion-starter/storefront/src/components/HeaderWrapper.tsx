@@ -32,7 +32,12 @@ export const HeaderWrapper: React.FC<{ children?: React.ReactNode }> = ({
       return
     }
 
-    const nextElement = headerElement.nextElementSibling
+    // The page transition wrapper is not part of the layout, so measure the
+    // page's own first section rather than the wrapper around all of it.
+    const sibling = headerElement.nextElementSibling
+    const nextElement = sibling?.classList.contains("page-transition")
+      ? sibling.firstElementChild
+      : sibling
     let triggerPosition = 0
 
     const updateTriggerPosition = () => {

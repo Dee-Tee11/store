@@ -9,6 +9,12 @@ import { RegionSwitcher } from "@/components/RegionSwitcher"
 import { SearchField } from "@/components/SearchField"
 import { useSearchParams } from "next/navigation"
 
+const navLinks = [
+  { href: "/about", label: "About" },
+  { href: "/brands", label: "Brands" },
+  { href: "/store", label: "Shop" },
+]
+
 export const HeaderDrawer: React.FC<{
   countryOptions: {
     country: string | undefined
@@ -54,28 +60,21 @@ export const HeaderDrawer: React.FC<{
                 </button>
               </div>
               <div className="text-lg flex flex-col gap-8 font-medium px-8">
-                <LocalizedLink
-                  href="/about"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  About
-                </LocalizedLink>
-                <LocalizedLink
-                  href="/brands"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Brands
-                </LocalizedLink>
-                <LocalizedLink
-                  href="/store"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Shop
-                </LocalizedLink>
+                {navLinks.map((link, index) => (
+                  <LocalizedLink
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="animate-slide-in-left duration-500"
+                    style={{ animationDelay: `${120 + index * 60}ms` }}
+                  >
+                    {link.label}
+                  </LocalizedLink>
+                ))}
               </div>
               <RegionSwitcher
                 countryOptions={countryOptions}
-                className="mt-auto ml-8 mb-8"
+                className="mt-auto ml-8 mb-8 animate-slide-in-left duration-500 [animation-delay:320ms]"
                 selectButtonClassName="max-md:text-base gap-2 p-1 w-auto"
                 selectIconClassName="text-current w-6 h-6"
               />

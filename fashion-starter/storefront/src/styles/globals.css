@@ -15,6 +15,77 @@
   h6 {
     @apply font-medium;
   }
+
+  /* Animations run instantly instead of being removed, so anything that only
+     becomes visible at the end of its animation still shows up. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Page-to-page slide, driven by ViewTransitions.tsx. The header keeps its own
+   snapshot so it stays put while the page underneath slides. Named here rather
+   than in the className so it never becomes part of the hydrated markup. */
+#site-header {
+  view-transition-name: site-header;
+}
+
+/* Over a hero image the header text is white, which disappears on the light
+   parts of the photo. A contour keeps letters and icons readable on anything;
+   it is dropped as soon as the header gets its solid white background. */
+@media (min-width: 768px) {
+  #site-header[data-light="true"]:not([data-sticky="true"]) {
+    filter: drop-shadow(0 0 1px rgba(5, 5, 5, 0.7))
+      drop-shadow(0 1px 2px rgba(5, 5, 5, 0.5))
+      drop-shadow(0 0 12px rgba(5, 5, 5, 0.4));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes view-transition-out {
+    to {
+      transform: translateX(-20%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes view-transition-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+
+  ::view-transition-image-pair(root) {
+    isolation: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+    display: block;
+  }
+
+  ::view-transition-old(root) {
+    animation: 0.45s cubic-bezier(0.16, 1, 0.3, 1) both view-transition-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: 0.45s cubic-bezier(0.16, 1, 0.3, 1) both view-transition-in;
+  }
+}
+
+/* The mount animation is only a fallback: where view transitions run, the
+   slide already covers the navigation. */
+html[data-view-transitions] .page-transition {
+  animation: none;
 }
 
 @layer utilities {

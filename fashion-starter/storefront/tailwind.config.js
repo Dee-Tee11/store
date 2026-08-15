@@ -161,6 +161,34 @@ module.exports = {
             transform: "translateX(100%)",
           },
         },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(2rem)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-down": {
+          from: { opacity: "0", transform: "translateY(-2rem)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-2.5rem)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(2.5rem)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "page-in": {
+          from: { opacity: "0", transform: "translateY(0.75rem)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "slide-up": "slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "slide-down": "slide-down 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "slide-in-left": "slide-in-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "slide-in-right":
+          "slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "page-in": "page-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
       boxShadow: {
         modal: "0px 0px 40px -16px rgba(0, 0, 0, 0.20)",
