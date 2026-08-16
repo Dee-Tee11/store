@@ -8,7 +8,6 @@ import {
 } from "@lib/data/template-images"
 import { Layout, LayoutColumn } from "@/components/Layout"
 import { LocalizedLink } from "@/components/LocalizedLink"
-import { CollectionsSection } from "@/components/CollectionsSection"
 import { Reveal } from "@/components/Reveal"
 
 export const metadata: Metadata = {
@@ -102,27 +101,18 @@ export default async function BrandsPage() {
               />
             </Reveal>
           </LayoutColumn>
-          <LayoutColumn>
-            <Reveal>
-              <Image
-                src={images.brands_section1_wide}
-                width={2496}
-                height={1404}
-                alt="Technology at South Store"
-                className="mt-26 md:mt-36 mb-8 md:mb-26"
-                unoptimized={isExternalImage(images.brands_section1_wide)}
-              />
-            </Reveal>
-          </LayoutColumn>
+        </Layout>
+        <Layout className="mt-26 md:mt-36">
           <LayoutColumn start={1} end={{ base: 13, md: 8 }}>
             <Reveal direction="left">
               <h3 className="text-md mb-6 md:mb-16 md:text-2xl">
-                Sound and personal care from names you already trust.
+                Sound that holds up day to day.
               </h3>
               <div className="md:text-md max-md:mb-16 max-w-135">
                 <p>
-                  JBL for speakers and headphones that hold up day to day, Dyson
-                  for hair care technology that does what it promises.
+                  JBL speakers and headphones for the everyday &mdash; the ones
+                  you take to the kitchen, the gym and the commute, and that
+                  keep working after the novelty wears off.
                 </p>
               </div>
             </Reveal>
@@ -134,10 +124,27 @@ export default async function BrandsPage() {
                 name="JBL"
                 description="Speakers and headphones"
                 href="/store"
-                className="mb-8 md:mb-16 inline-block"
               />
             </Reveal>
-            <Reveal direction="right" delay={200}>
+          </LayoutColumn>
+        </Layout>
+        <Layout className="mt-26 md:mt-36">
+          <LayoutColumn start={1} end={{ base: 13, md: 8 }}>
+            <Reveal direction="left">
+              <h3 className="text-md mb-6 md:mb-16 md:text-2xl">
+                Hair care technology that does what it promises.
+              </h3>
+              <div className="md:text-md max-md:mb-16 max-w-135">
+                <p>
+                  Dyson for styling and drying without the guesswork &mdash;
+                  engineered to protect the hair while it works, and built to
+                  last well beyond the first season.
+                </p>
+              </div>
+            </Reveal>
+          </LayoutColumn>
+          <LayoutColumn start={{ base: 1, md: 9 }} end={13}>
+            <Reveal direction="right" delay={100}>
               <BrandCard
                 src={images.brands_brand3_image}
                 name="Dyson"
@@ -147,17 +154,7 @@ export default async function BrandsPage() {
             </Reveal>
           </LayoutColumn>
         </Layout>
-        <Reveal>
-          <Image
-            src={images.brands_section2_wide}
-            width={2880}
-            height={1618}
-            alt="Fragrances at South Store"
-            className="md:h-screen md:object-cover mt-26 md:mt-36 mb-8 md:mb-26"
-            unoptimized={isExternalImage(images.brands_section2_wide)}
-          />
-        </Reveal>
-        <Layout>
+        <Layout className="mt-26 md:mt-36">
           <LayoutColumn start={1} end={{ base: 13, md: 8 }}>
             <Reveal direction="left">
               <h3 className="text-md mb-6 md:mb-16 md:text-2xl">
@@ -183,7 +180,6 @@ export default async function BrandsPage() {
             </Reveal>
           </LayoutColumn>
         </Layout>
-        <CollectionsSection className="mt-26 md:mt-36" />
       </div>
     </>
   )

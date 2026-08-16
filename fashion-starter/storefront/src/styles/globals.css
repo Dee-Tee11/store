@@ -37,17 +37,6 @@
   view-transition-name: site-header;
 }
 
-/* Over a hero image the header text is white, which disappears on the light
-   parts of the photo. A contour keeps letters and icons readable on anything;
-   it is dropped as soon as the header gets its solid white background. */
-@media (min-width: 768px) {
-  #site-header[data-light="true"]:not([data-sticky="true"]) {
-    filter: drop-shadow(0 0 1px rgba(5, 5, 5, 0.7))
-      drop-shadow(0 1px 2px rgba(5, 5, 5, 0.5))
-      drop-shadow(0 0 12px rgba(5, 5, 5, 0.4));
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   @keyframes view-transition-out {
     to {

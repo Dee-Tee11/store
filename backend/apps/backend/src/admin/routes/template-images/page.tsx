@@ -99,18 +99,6 @@ const SECTIONS: SectionDefinition[] = [
         description: 'Full-screen image at the top of the Brands page.',
         recommendation: '2880 × 1500 recommended · JPG, PNG, WebP · up to 10 MB',
       },
-      {
-        key: 'brands_section1_wide',
-        label: 'Section 1 Wide Banner',
-        description: 'Wide image in the middle of the page.',
-        recommendation: '2496 × 1404 recommended · JPG, PNG, WebP · up to 10 MB',
-      },
-      {
-        key: 'brands_section2_wide',
-        label: 'Section 2 Wide Banner',
-        description: 'Wide image in the lower part of the page.',
-        recommendation: '2880 × 1618 recommended · JPG, PNG, WebP · up to 10 MB',
-      },
     ],
   },
   {
@@ -127,13 +115,13 @@ const SECTIONS: SectionDefinition[] = [
       {
         key: 'brands_brand2_image',
         label: 'Card 2 — JBL',
-        description: 'Thumbnail for the second brand card (audio section).',
+        description: 'Thumbnail for the second brand card (JBL section).',
         recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
       },
       {
         key: 'brands_brand3_image',
         label: 'Card 3 — Dyson',
-        description: 'Thumbnail for the third brand card (personal care section).',
+        description: 'Thumbnail for the third brand card (Dyson section).',
         recommendation: '768 × 572 recommended · JPG, PNG, WebP · up to 10 MB',
       },
       {

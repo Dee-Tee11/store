@@ -17,8 +17,6 @@ export const TEMPLATE_IMAGE_DEFAULT_FILES = {
   about_page_wide: '/images/content/living-room-gray-three-seater-puffy-sofa.png',
   // Brands page
   brands_hero_image: '/images/content/living-room-dark-green-three-seater-sofa.png',
-  brands_section1_wide: '/images/content/living-room-brown-armchair-gray-corner-sofa.png',
-  brands_section2_wide: '/images/content/living-room-gray-two-seater-puffy-sofa.png',
   brands_brand1_image: '/images/content/dark-gray-three-seater-sofa.png',
   brands_brand2_image: '/images/content/gray-three-seater-sofa.png',
   brands_brand3_image: '/images/content/gray-arm-chair.png',
