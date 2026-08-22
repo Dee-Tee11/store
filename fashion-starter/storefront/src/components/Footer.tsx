@@ -6,6 +6,8 @@ import { Layout, LayoutColumn } from "@/components/Layout"
 
 import { LocalizedLink } from "@/components/LocalizedLink"
 
+const INSTAGRAM_URL = "https://www.instagram.com/southstore2026/"
+
 export const Footer: React.FC = () => {
   const pathName = usePathname()
   const { countryCode } = useParams()
@@ -35,20 +37,6 @@ export const Footer: React.FC = () => {
               <div className="flex gap-10 xl:gap-18 max-md:text-xs flex-1 justify-between lg:justify-center">
                 <ul className="flex flex-col gap-6 md:gap-3.5">
                   <li>
-                    <LocalizedLink href="/">FAQ</LocalizedLink>
-                  </li>
-                  <li>
-                    <LocalizedLink href="/">Help</LocalizedLink>
-                  </li>
-                  <li>
-                    <LocalizedLink href="/">Delivery</LocalizedLink>
-                  </li>
-                  <li>
-                    <LocalizedLink href="/">Returns</LocalizedLink>
-                  </li>
-                </ul>
-                <ul className="flex flex-col gap-6 md:gap-3.5">
-                  <li>
                     <LocalizedLink href="/privacy-policy">
                       Privacy Policy
                     </LocalizedLink>
@@ -58,24 +46,16 @@ export const Footer: React.FC = () => {
                       Cookie Policy
                     </LocalizedLink>
                   </li>
-                  <li>
-                    <LocalizedLink href="/terms-of-use">
-                      Terms of Use
-                    </LocalizedLink>
-                  </li>
                 </ul>
                 <ul className="flex flex-col gap-6 md:gap-3.5">
                   <li>
-                    <a
-                      href="https://www.instagram.com/agiloltd/"
-                      target="_blank"
-                    >
+                    <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
                       Instagram
                     </a>
                   </li>
                   <li>
-                    <a href="https://tiktok.com" target="_blank">
-                      TikTok
+                    <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
+                      Contacts
                     </a>
                   </li>
                 </ul>

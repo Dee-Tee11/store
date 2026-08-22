@@ -114,13 +114,18 @@ export default function CookiePolicyPage() {
         <h2>6. Contact Us:</h2>
         <p>
           If you have any questions, concerns, or requests regarding this
-          Privacy Policy or how we handle your personal information, please
-          contact us at:
+          Cookie Policy or how we handle your personal information, send us a
+          direct message on Instagram:
         </p>
         <p>
-          Email: privacy@southstore.com
-          <br />
-          Address: Skärgårdsvägen 12, 124 55 Stockholm
+          <a
+            href="https://www.instagram.com/southstore2026/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            @southstore2026
+          </a>
         </p>
       </LayoutColumn>
     </Layout>
