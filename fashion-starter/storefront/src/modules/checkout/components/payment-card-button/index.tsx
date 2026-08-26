@@ -7,14 +7,14 @@ import { HttpTypes } from "@medusajs/types"
 import { isStripe } from "@lib/constants"
 import { Button } from "@/components/Button"
 import { usePathname, useRouter } from "next/navigation"
-import { useInitiatePaymentSession, useSetPaymentMethod } from "hooks/cart"
+import { useInitiatePaymentSession } from "hooks/cart"
 import { withReactQueryProvider } from "@lib/util/react-query"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
   isLoading: boolean
   setIsLoading: (value: boolean) => void
-  cardComplete?: boolean
+  paymentComplete?: boolean
   createQueryString: (name: string, value: string) => string
   selectedPaymentMethod: string
   setError: (value: string | null) => void
@@ -24,7 +24,7 @@ const PaymentCardButton: React.FC<PaymentButtonProps> = ({
   cart,
   isLoading,
   setIsLoading,
-  cardComplete,
+  paymentComplete,
   createQueryString,
   selectedPaymentMethod,
   setError,
@@ -32,14 +32,16 @@ const PaymentCardButton: React.FC<PaymentButtonProps> = ({
   const session = cart.payment_collection?.payment_sessions?.find(
     (s) => s.status === "pending"
   )
+
+  // Só quando a sessão activa já é do Stripe é que o PaymentElement está montado
+  // e há alguma coisa para validar. Caso contrário há primeiro que criar a sessão.
   if (isStripe(session?.provider_id) && isStripe(selectedPaymentMethod)) {
     return (
       <StripeCardPaymentButton
         setError={setError}
-        cart={cart}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        cardComplete={cardComplete}
+        paymentComplete={paymentComplete}
         createQueryString={createQueryString}
       />
     )
@@ -48,7 +50,6 @@ const PaymentCardButton: React.FC<PaymentButtonProps> = ({
   return (
     <PaymentMethodButton
       setError={setError}
-      cart={cart}
       isLoading={isLoading}
       setIsLoading={setIsLoading}
       createQueryString={createQueryString}
@@ -58,71 +59,45 @@ const PaymentCardButton: React.FC<PaymentButtonProps> = ({
 }
 
 const StripeCardPaymentButton = ({
-  cart,
   isLoading,
   setIsLoading,
-  cardComplete,
+  paymentComplete,
   createQueryString,
   setError,
 }: {
-  cart: HttpTypes.StoreCart
   isLoading: boolean
   setIsLoading: (value: boolean) => void
-  cardComplete?: boolean
+  paymentComplete?: boolean
   createQueryString: (name: string, value: string) => string
   setError: (value: string | null) => void
 }) => {
   const stripe = useStripe()
   const elements = useElements()
-  const card = elements?.getElement("card")
 
   const router = useRouter()
-
-  const setPaymentMethod = useSetPaymentMethod()
-
-  const session = cart.payment_collection?.payment_sessions?.find(
-    (s) => s.status === "pending"
-  )
   const pathname = usePathname()
-
-  const initiatePaymentSession = useInitiatePaymentSession()
 
   const handleSubmit = async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      const shouldInputCard = !session
+      if (!stripe || !elements) {
+        setError("Payment form is still loading. Please try again.")
+        return
+      }
 
-      if (!isStripe(session?.provider_id)) {
-        await initiatePaymentSession.mutateAsync({ providerId: "stripe" })
+      // Valida o PaymentElement e mostra os erros inline antes de avançar.
+      // O pagamento em si só é confirmado no passo de review.
+      const { error: submitError } = await elements.submit()
+
+      if (submitError) {
+        setError(submitError.message ?? "Please check your payment details.")
+        return
       }
-      if (!shouldInputCard) {
-        if (card) {
-          const token = await stripe?.createToken(card, {
-            name:
-              cart.billing_address?.first_name +
-              " " +
-              cart.billing_address?.last_name,
-            address_line1: cart.billing_address?.address_1 ?? undefined,
-            address_line2: cart.billing_address?.address_2 ?? undefined,
-            address_city: cart.billing_address?.city ?? undefined,
-            address_country: cart.billing_address?.country_code ?? undefined,
-            address_zip: cart.billing_address?.postal_code ?? undefined,
-            address_state: cart.billing_address?.province ?? undefined,
-          })
-          if (token) {
-            await setPaymentMethod.mutateAsync({
-              sessionId: session.id,
-              token: token.token?.id,
-            })
-          }
-        }
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
-        )
-      }
+
+      router.push(pathname + "?" + createQueryString("step", "review"), {
+        scroll: false,
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : `${err}`)
     } finally {
@@ -135,10 +110,10 @@ const StripeCardPaymentButton = ({
       className="mt-6"
       onPress={handleSubmit}
       isLoading={isLoading}
-      isDisabled={!cardComplete}
+      isDisabled={!paymentComplete}
       data-testid="submit-payment-button"
     >
-      {!session ? "Enter card details" : "Continue to review"}
+      Continue to review
     </Button>
   )
 }
@@ -150,7 +125,6 @@ const PaymentMethodButton = ({
   selectedPaymentMethod,
   setError,
 }: {
-  cart: HttpTypes.StoreCart
   isLoading: boolean
   setIsLoading: (value: boolean) => void
   createQueryString: (name: string, value: string) => string
@@ -164,12 +138,15 @@ const PaymentMethodButton = ({
 
   const handleSubmit = () => {
     setIsLoading(true)
+    setError(null)
     initiatePaymentSession.mutate(
       {
         providerId: selectedPaymentMethod,
       },
       {
         onSuccess: () => {
+          // Com o Stripe ficamos no mesmo passo: a sessão acabou de nascer e é
+          // ela que traz o client_secret com que o PaymentElement é montado.
           if (!isStripe(selectedPaymentMethod)) {
             return router.push(
               pathname + "?" + createQueryString("step", "review"),

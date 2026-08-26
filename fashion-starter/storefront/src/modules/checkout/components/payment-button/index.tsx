@@ -2,10 +2,10 @@
 
 import { OnApproveActions, OnApproveData } from "@paypal/paypal-js"
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js"
-import { useStripe } from "@stripe/react-stripe-js"
-import React, { useState } from "react"
+import { useElements, useStripe } from "@stripe/react-stripe-js"
+import React, { useEffect, useRef, useState } from "react"
 import { HttpTypes } from "@medusajs/types"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 
 import Spinner from "@modules/common/icons/spinner"
 import { isManual, isPaypal, isStripe } from "@lib/constants"
@@ -38,7 +38,9 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   //   return <GiftCardPaymentButton />
   // }
 
-  const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const paymentSession = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  )
 
   switch (true) {
     case isStripe(paymentSession?.provider_id):
@@ -108,50 +110,107 @@ const StripePaymentButton = ({
   }
 
   const stripe = useStripe()
+  const elements = useElements()
+  const searchParams = useSearchParams()
+  const { countryCode } = useParams<{ countryCode: string }>()
 
   const session = cart.payment_collection?.payment_sessions?.find(
     (s) => s.status === "pending"
   )
 
-  const disabled = !stripe || !session?.data?.payment_method_id ? true : false
+  const disabled = !stripe || !elements || !session
 
-  const handlePayment = async () => {
-    setSubmitting(true)
+  const isPaid = (status?: string) =>
+    status === "succeeded" || status === "requires_capture"
 
-    if (!stripe) {
-      setSubmitting(false)
+  // Quando o emissor força um redirect (em vez do modal 3DS), o cliente volta a
+  // esta página com o intent na querystring. Retomamos daí em vez de o deixar
+  // com um carrinho já pago e nenhuma encomenda.
+  const redirectClientSecret = searchParams.get("payment_intent_client_secret")
+  const handledRedirect = useRef(false)
+
+  useEffect(() => {
+    if (!stripe || !redirectClientSecret || handledRedirect.current) {
       return
     }
-    const paymentMethodId = session?.data?.payment_method_id as string
+    handledRedirect.current = true
+    setSubmitting(true)
 
-    await stripe
-      .confirmCardPayment(session?.data.client_secret as string, {
-        payment_method: paymentMethodId,
-      })
-      .then(({ error, paymentIntent }) => {
-        if (error) {
-          const pi = error.payment_intent
-
-          if (
-            (pi && pi.status === "requires_capture") ||
-            (pi && pi.status === "succeeded")
-          ) {
-            onPaymentCompleted()
-          }
-
-          setErrorMessage(error.message || null)
+    stripe
+      .retrievePaymentIntent(redirectClientSecret)
+      .then(({ paymentIntent, error }) => {
+        if (error || !paymentIntent) {
+          setErrorMessage(error?.message ?? "Could not verify the payment.")
+          setSubmitting(false)
           return
         }
 
-        if (
-          (paymentIntent && paymentIntent.status === "requires_capture") ||
-          paymentIntent.status === "succeeded"
-        ) {
-          return onPaymentCompleted()
+        if (isPaid(paymentIntent.status)) {
+          onPaymentCompleted()
+          return
         }
 
-        return
+        setErrorMessage(
+          `Payment was not completed (status: ${paymentIntent.status}).`
+        )
+        setSubmitting(false)
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripe, redirectClientSecret])
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+
+    if (!stripe || !elements || !session) {
+      setSubmitting(false)
+      return
+    }
+
+    const clientSecret = session.data?.client_secret as string | undefined
+
+    if (!clientSecret) {
+      setErrorMessage(
+        "This payment session is no longer valid. Please go back and select a payment method again."
+      )
+      setSubmitting(false)
+      return
+    }
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: {
+        return_url: `${window.location.origin}/${countryCode}/checkout?step=review`,
+      },
+      // O 3DS resolve-se num modal; só há redirect se o emissor o exigir.
+      redirect: "if_required",
+    })
+
+    if (error) {
+      // Pode ter sido cobrado à mesma (ex.: dupla confirmação) — nesse caso não
+      // faz sentido mostrar erro, faz sentido criar a encomenda.
+      if (isPaid(error.payment_intent?.status)) {
+        onPaymentCompleted()
+        return
+      }
+
+      setErrorMessage(error.message ?? "Payment failed. Please try again.")
+      setSubmitting(false)
+      return
+    }
+
+    if (isPaid(paymentIntent?.status)) {
+      onPaymentCompleted()
+      return
+    }
+
+    setErrorMessage(
+      paymentIntent?.status === "requires_action"
+        ? "This payment needs additional authentication. Please try again."
+        : `Payment could not be completed (status: ${paymentIntent?.status ?? "unknown"}).`
+    )
+    setSubmitting(false)
   }
 
   return (

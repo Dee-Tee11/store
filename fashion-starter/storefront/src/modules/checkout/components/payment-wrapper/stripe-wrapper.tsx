@@ -17,26 +17,56 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   stripePromise,
   children,
 }) => {
+  const clientSecret = paymentSession?.data?.client_secret as string | undefined
+
+  // Sem chave ou sem client secret não há Elements para montar. Antes isto fazia
+  // `throw` e rebentava a página inteira de checkout; agora o resto dos passos
+  // continua a funcionar e o passo de pagamento é que fica sem o formulário.
+  if (!stripeKey || !stripePromise || !clientSecret) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[stripe] Elements não montado.",
+        !stripeKey
+          ? "Falta NEXT_PUBLIC_STRIPE_KEY."
+          : !clientSecret
+            ? "A payment session não trouxe client_secret — confirma STRIPE_API_KEY no backend."
+            : ""
+      )
+    }
+    return <>{children}</>
+  }
+
   const options: StripeElementsOptions = {
-    clientSecret: paymentSession!.data?.client_secret as string | undefined,
-  }
-
-  if (!stripeKey) {
-    throw new Error(
-      "Stripe key is missing. Set NEXT_PUBLIC_STRIPE_KEY environment variable."
-    )
-  }
-
-  if (!stripePromise) {
-    throw new Error(
-      "Stripe promise is missing. Make sure you have provided a valid Stripe key."
-    )
-  }
-
-  if (!paymentSession?.data?.client_secret) {
-    throw new Error(
-      "Stripe client secret is missing. Cannot initialize Stripe."
-    )
+    clientSecret,
+    appearance: {
+      variables: {
+        fontFamily: "Inter, sans-serif",
+        fontSizeBase: "16px",
+        colorPrimary: "#050505",
+        colorText: "#050505",
+        colorTextPlaceholder: "#808080",
+        colorDanger: "#DF4718",
+        borderRadius: "4px",
+      },
+      rules: {
+        ".Input": {
+          border: "1px solid #D1D1D1",
+          boxShadow: "none",
+          padding: "16px",
+        },
+        ".Input:hover": {
+          border: "1px solid #808080",
+        },
+        ".Input:focus": {
+          border: "1px solid #808080",
+          boxShadow: "none",
+          outline: "none",
+        },
+        ".Label": {
+          color: "#545457",
+        },
+      },
+    },
   }
 
   return (
