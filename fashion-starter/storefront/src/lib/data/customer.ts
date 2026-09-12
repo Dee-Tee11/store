@@ -93,11 +93,6 @@ export async function signup(formData: z.infer<typeof signupFormSchema>) {
 
     await setAuthToken(loginToken)
 
-    await sdk.client.fetch("/store/custom/customer/send-welcome-email", {
-      method: "POST",
-      headers: await getAuthHeaders(),
-    })
-
     revalidateTag("customer")
 
     const cartId = await getCartId()

@@ -17,6 +17,16 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      // Produção: imagens servidas do R2 e do backend. Sem isto o Next
+      // recusa-se a carregá-las e a loja aparece sem fotografias.
+      {
+        protocol: "https",
+        hostname: "**.southstore.net",
+      },
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
+      },
       {
         protocol: "https",
         hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com",

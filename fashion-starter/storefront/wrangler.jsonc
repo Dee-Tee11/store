@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "southstore-storefront",
+  "main": ".open-next/worker.js",
+
+  // nodejs_compat é obrigatório: o Next e o SDK do Medusa usam APIs de Node
+  // que o runtime dos Workers só expõe com esta flag.
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+
+  // As variáveis de ambiente NÃO ficam aqui — são definidas no painel da
+  // Cloudflare (Workers > Settings > Variables), para não irem para o git.
+  // Ver DEPLOY.md para a lista.
+}

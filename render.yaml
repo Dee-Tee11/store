@@ -1,0 +1,90 @@
+# Blueprint do Render — backend Medusa.
+# O storefront não está aqui: vai para a Cloudflare (ver DEPLOY.md).
+#
+# Importante: as migrações da base de dados NÃO correm automaticamente.
+# São um passo manual e deliberado — ver DEPLOY.md.
+
+services:
+  - type: web
+    name: southstore-backend
+    runtime: node
+    plan: starter # o plano grátis adormece ao fim de 15 min; numa loja isso não serve
+    region: frankfurt # mais perto de PT e do Supabase eu-west
+    rootDir: backend
+    branch: main
+
+    # Instala o workspace, compila, e instala só as dependências de produção
+    # dentro do output do build (.medusa/server), que é o que vai correr.
+    buildCommand: >-
+      npm ci &&
+      npm run build --workspace=@dtc/backend &&
+      cd apps/backend/.medusa/server &&
+      npm install --omit=dev
+
+    startCommand: cd apps/backend/.medusa/server && npx medusa start
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+
+      # --- Ligação à base de dados (Supabase) -------------------------------
+      # Usa a connection string do "Session pooler" do Supabase, não a directa:
+      # o Render liga por IPv4 e a directa só responde em IPv6.
+      - key: DATABASE_URL
+        sync: false
+
+      # --- Segredos --------------------------------------------------------
+      # Gerar com: openssl rand -base64 32   (um valor diferente para cada)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECRET
+        generateValue: true
+      - key: AUTH_MFA_ENCRYPTION_KEY
+        generateValue: true
+
+      # --- Domínios autorizados --------------------------------------------
+      - key: STORE_CORS
+        value: https://southstore.net,https://www.southstore.net
+      - key: ADMIN_CORS
+        value: https://api.southstore.net
+      - key: AUTH_CORS
+        value: https://southstore.net,https://www.southstore.net,https://api.southstore.net
+
+      # --- Emails (Resend) -------------------------------------------------
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: South Store <orders@southstore.net>
+      - key: ORDER_NOTIFICATION_EMAIL
+        value: southstorept1990@gmail.com
+      - key: STORE_NAME
+        value: South Store
+      - key: MEDUSA_BACKEND_URL
+        value: https://api.southstore.net
+      # Usado no link do email de recuperação de password.
+      - key: STOREFRONT_URL
+        value: https://southstore.net
+
+      # --- Pagamentos (Stripe) ---------------------------------------------
+      # Chaves LIVE. O webhook aponta para:
+      #   https://api.southstore.net/hooks/payment/stripe_stripe
+      - key: STRIPE_API_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # --- Imagens dos produtos (Cloudflare R2) ----------------------------
+      # Sem estas, os ficheiros vão para o disco local e desaparecem a cada
+      # deploy. Ver DEPLOY.md para como criar o bucket e as chaves.
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false

@@ -25,8 +25,9 @@ Monorepo com duas aplicações independentes (não partilham workspace):
 ## Infraestrutura
 
 - **Postgres: Supabase** (`DATABASE_URL` em `backend/apps/backend/.env`). O `docker-compose.yml`
-  na raiz tem um Postgres local que **não** é o que está em uso — só o Redis é relevante.
-- **Redis:** local via `docker compose up -d redis`.
+  na raiz tem um Postgres local que **não** é o que está em uso.
+- **Sem Redis.** O event bus, a cache e o workflow engine correm em memória. Implica
+  instância única — o backend não pode ser escalado horizontalmente.
 
 ## Comandos
 
