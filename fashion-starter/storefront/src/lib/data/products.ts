@@ -43,21 +43,26 @@ export const getProductByHandle = async function (
 }
 
 export const getProductFashionDataByHandle = async function (handle: string) {
-  return sdk.client.fetch<{
-    materials: {
-      id: string
-      name: string
-      colors: {
+  // A rota vinha do módulo "fashion" do backend do template, que não existe
+  // neste backend — responde 404. Sem materiais, a página de produto mostra
+  // as opções normais em vez de rebentar (e de partir o build).
+  return sdk.client
+    .fetch<{
+      materials: {
         id: string
         name: string
-        hex_code: string
+        colors: {
+          id: string
+          name: string
+          hex_code: string
+        }[]
       }[]
-    }[]
-  }>(`/store/custom/fashion/${handle}`, {
-    method: "GET",
-    next: { tags: ["products"] },
-    cache: "force-cache",
-  })
+    }>(`/store/custom/fashion/${handle}`, {
+      method: "GET",
+      next: { tags: ["products"] },
+      cache: "force-cache",
+    })
+    .catch(() => ({ materials: [] }))
 }
 
 export const getProductsList = async function ({
