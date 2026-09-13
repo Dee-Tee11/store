@@ -296,6 +296,99 @@ e reinicia o serviço.
 
 ---
 
+## 7. Backups semanais e keep-alive do Supabase
+
+Dois workflows do GitHub Actions:
+
+- [`backup-database.yml`](.github/workflows/backup-database.yml) — às segundas,
+  03:00 UTC: `pg_dump` do schema `public`, cifra o ficheiro e envia-o como
+  anexo, pelo Resend, para a caixa da loja.
+- [`supabase-keep-alive.yml`](.github/workflows/supabase-keep-alive.yml) — de 6
+  em 6 horas: uma leitura na base, para o plano grátis do Supabase não pausar o
+  projecto nas semanas sem visitas.
+
+> O repositório é **público**. Por isso o dump nunca fica no GitHub (nem como
+> artifact, nem nos logs) e vai cifrado. Os dados incluem nomes, moradas e
+> emails de clientes.
+
+**Porque não um cron no próprio Supabase:** o `pg_cron` só corre SQL e as Edge
+Functions não têm `pg_dump` (e param aos 2 s de CPU), portanto não dá para um
+backup restaurável. E para o keep-alive também não serve: o Supabase só conta
+actividade que chega de fora, e com o projecto pausado o cron deixa de correr.
+
+### Configurar (uma vez)
+
+1. **Frase de cifra** — `openssl rand -base64 32`. Guarda-a num gestor de
+   passwords **antes** de a pôr no GitHub: os segredos do GitHub não se voltam a
+   ler, e sem esta frase os backups não abrem.
+2. **Segredos** — GitHub > repositório > Settings > Secrets and variables >
+   Actions > New repository secret:
+
+   | Nome | Valor |
+   |---|---|
+   | `SUPABASE_DATABASE_URL` | a mesma do Render (**Session pooler** — o GitHub também não tem IPv6) |
+   | `BACKUP_PASSPHRASE` | a frase do passo 1 |
+   | `RESEND_API_KEY` | a mesma do Render |
+   | `BACKUP_EMAIL_TO` | `southstorept1990@gmail.com` |
+
+3. **Testar já** — GitHub > Actions > "Backup da base de dados" > Run workflow.
+   Tem de chegar o email "Backup da base de dados — AAAA-MM-DD" com o anexo
+   `.dump.gpg`. Faz o mesmo em "Supabase keep-alive".
+
+Notas:
+
+- **Tamanho.** O Resend aceita até 40 MB por email; o workflow falha de
+  propósito se o backup cifrado passar de 25 MB. Uma loja deste tamanho fica em
+  poucos MB, mas se um dia falhar por isso é altura de mudar o destino.
+- **Gmail.** Os backups acumulam-se na caixa (15 GB grátis). Um filtro com
+  `subject:"Backup da base de dados"` → etiqueta e arquivar mantém a caixa de
+  entrada limpa. A conta tem de ter verificação em 2 passos.
+- **Falhas.** Se um workflow falhar, o GitHub envia email. Num repositório
+  público sem commits durante 60 dias, o GitHub **desliga os workflows
+  agendados** (avisa antes) — basta voltar a activá-los em Actions. Com o
+  keep-alive desligado, o Supabase volta a poder pausar.
+
+### Se o Supabase pausar mesmo assim
+
+Sinal: a loja e o Admin deixam de carregar e o Render mostra erros de ligação à
+base de dados. Os dados não se perdem.
+
+1. Supabase > o projecto > **Restore project** (demora uns minutos).
+2. Render > `southstore-backend` > **Manual Deploy > Restart service**, para o
+   Medusa voltar a abrir as ligações.
+3. GitHub > Actions > "Supabase keep-alive": ver porque parou (desactivado
+   pelos 60 dias sem commits, ou o segredo mudou) e voltar a activar.
+
+A solução definitiva é o plano **Pro** do Supabase (25 USD/mês): não pausa e
+tem backups diários. Com clientes a sério, vale a pena — uma pausa deita a loja
+abaixo.
+
+### Restaurar um backup
+
+Descarrega o anexo do email e:
+
+```bash
+# 1. Decifrar (pede a frase)
+gpg --decrypt southstore-2026-09-14T0300Z.dump.gpg > backup.dump
+
+# 2. Ver o conteúdo
+docker run --rm -v "$PWD:/b" postgres:18-alpine pg_restore --list /b/backup.dump | less
+
+# 3. Restaurar numa base VAZIA — por exemplo um projecto Supabase novo
+docker run --rm -v "$PWD:/b" postgres:18-alpine \
+  pg_restore --no-owner --no-privileges --dbname "postgresql://..." /b/backup.dump
+```
+
+No passo 3 aparece `schema "public" already exists` e `errors ignored on
+restore: 1` — é normal (qualquer base nova já tem o schema `public`) e os dados
+entram na mesma. Qualquer **outro** erro não é normal.
+
+> Nunca restaures por cima da base em uso sem pensar duas vezes: substitui os
+> dados reais pelos da semana do backup. O caminho seguro é restaurar numa base
+> nova, confirmar, e só depois apontar o `DATABASE_URL` para lá.
+
+---
+
 ## Verificar depois de lançar
 
 - [ ] `curl https://api.southstore.net/health` responde
@@ -309,6 +402,12 @@ e reinicia o serviço.
   - [ ] a encomenda aparece no Admin
 - [ ] "Esqueci-me da password" chega ao email e o link funciona
 - [ ] Criar conta nova funciona
+  - [ ] o cliente recebe "Welcome to South Store"
+  - [ ] `southstorept1990@gmail.com` recebe "New account — ..."
+- [ ] "Continue with Google" entra e volta à conta (precisa de `GOOGLE_CLIENT_ID`
+      e `GOOGLE_CLIENT_SECRET` no Render e da app publicada no Google Console)
+- [ ] O workflow de backup correu e chegou o email com o anexo
+- [ ] O workflow de keep-alive correu
 
 ---
 

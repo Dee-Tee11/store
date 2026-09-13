@@ -1,0 +1,52 @@
+# Evita que o Supabase (plano grátis) pause o projecto por inactividade.
+#
+# O Supabase pausa ao fim de uma semana sem "actividade de utilizadores" na
+# base de dados, e diz que "alguns pedidos por dia" chegam. Um pg_cron dentro
+# do Supabase não conta — e, se o projecto pausar, também deixa de correr. Por
+# isso a consulta vem de fora, quatro vezes por dia: se o GitHub falhar ou
+# atrasar uma execução, sobram as outras. Com a loja com visitas isto é
+# redundante, mas cobre as semanas paradas (o Render grátis adormece e deixa
+# de tocar na base).
+#
+# Segredo: SUPABASE_DATABASE_URL (o mesmo do backup).
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # de 6 em 6 horas; fora da hora certa, quando o GitHub atrasa menos
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+
+    steps:
+      - name: Consultar a base de dados
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Falta o segredo SUPABASE_DATABASE_URL"
+            exit 1
+          fi
+
+          python3 - <<'EOF'
+          import os, urllib.parse
+          url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
+          for part in (url.hostname, url.username):
+              if part:
+                  print(f"::add-mask::{part}")
+          EOF
+
+          # Uma leitura numa tabela real da loja. O resultado não vai para o
+          # log — o repositório é público.
+          docker run --rm -e DATABASE_URL postgres:18-alpine \
+            sh -c 'psql "$DATABASE_URL" -tAc "select 1 from public.customer limit 1" > /dev/null'
+          echo "Base de dados respondeu."

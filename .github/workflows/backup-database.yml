@@ -1,0 +1,141 @@
+# Backup semanal da base de dados (Supabase), enviado por email.
+#
+# O repositório é público, por isso o dump nunca fica como artifact do GitHub
+# nem aparece nos logs: é cifrado (gpg, AES-256) antes de sair do runner e só
+# depois segue como anexo, pelo Resend, para a caixa da loja.
+#
+# Porque não um cron no próprio Supabase: o pg_cron só corre SQL e as Edge
+# Functions não têm pg_dump (e param aos 2 s de CPU). Um backup restaurável
+# precisa do pg_dump a sério, que é o que corre aqui.
+#
+# Segredos (Settings > Secrets and variables > Actions) — ver DEPLOY.md, "Backups":
+#   SUPABASE_DATABASE_URL   connection string do Session pooler (também usada no keep-alive)
+#   BACKUP_PASSPHRASE       frase que cifra os backups; sem ela não abrem
+#   RESEND_API_KEY          a mesma do Render
+#   BACKUP_EMAIL_TO         para onde vão (vários separados por vírgula)
+
+name: Backup da base de dados
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # segundas às 03:00 UTC
+  workflow_dispatch: # botão "Run workflow", para testar ou fazer um fora de horas
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-database
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      BACKUP_EMAIL_TO: ${{ secrets.BACKUP_EMAIL_TO }}
+      BACKUP_EMAIL_FROM: South Store Backups <backups@southstore.net>
+
+    steps:
+      - name: Verificar segredos
+        run: |
+          missing=""
+          for name in DATABASE_URL BACKUP_PASSPHRASE RESEND_API_KEY BACKUP_EMAIL_TO; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Faltam segredos:$missing"
+            exit 1
+          fi
+
+          # O URL inteiro já é mascarado, mas uma mensagem de erro do pg_dump
+          # mostra o host e o utilizador em separado — escondem-se também.
+          python3 - <<'EOF'
+          import os, urllib.parse
+          url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
+          for part in (url.hostname, url.username):
+              if part:
+                  print(f"::add-mask::{part}")
+          EOF
+
+      - name: Dump
+        run: |
+          set -euo pipefail
+          file="southstore-$(date -u +%Y-%m-%dT%H%MZ).dump"
+          echo "FILE=$file" >> "$GITHUB_ENV"
+
+          # O pg_dump tem de ser da mesma versão do servidor ou mais recente;
+          # o 18 serve para o Postgres 15 e 17 do Supabase. Só o schema `public`:
+          # os outros (auth, storage…) são do Supabase e não se restauram.
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -e DATABASE_URL -e FILE="$file" -v "$PWD:/out" postgres:18-alpine \
+            sh -c 'pg_dump "$DATABASE_URL" --format=custom --schema=public --no-owner --no-privileges --file="/out/$FILE"'
+
+          # Um dump sem tabelas também "funciona" — confirma que trouxe dados.
+          tables=$(docker run --rm -v "$PWD:/out" postgres:18-alpine \
+            pg_restore --list "/out/$file" | grep -c "TABLE DATA" || true)
+          echo "TABLES=$tables" >> "$GITHUB_ENV"
+          echo "Tabelas com dados no dump: $tables"
+          if [ "$tables" -lt 10 ]; then
+            echo "::error::O dump tem só $tables tabelas — algo correu mal."
+            exit 1
+          fi
+
+      - name: Cifrar
+        run: |
+          set -euo pipefail
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 \
+            --output "$FILE.gpg" "$FILE" <<< "$BACKUP_PASSPHRASE"
+          rm -f "$FILE"
+          echo "Tamanho cifrado: $(du -h "$FILE.gpg" | cut -f1)"
+
+      - name: Enviar por email
+        run: |
+          set -euo pipefail
+
+          # O Resend aceita até 40 MB por email já em base64 (+33%). Acima de
+          # 25 MB em bruto deixa de caber com margem — é hora de mudar de destino.
+          size=$(stat -c %s "$FILE.gpg")
+          if [ "$size" -gt $((25 * 1024 * 1024)) ]; then
+            echo "::error::O backup tem $((size / 1024 / 1024)) MB, grande demais para email."
+            exit 1
+          fi
+
+          python3 - <<'EOF'
+          import base64, json, os
+          file = os.environ["FILE"] + ".gpg"
+          size_kb = os.path.getsize(file) // 1024
+          day = os.environ["FILE"][len("southstore-"):][:10]
+          html = f"""
+            <p>Backup semanal da base de dados da South Store.</p>
+            <ul>
+              <li>Ficheiro: <strong>{file}</strong> ({size_kb} KB, cifrado)</li>
+              <li>Tabelas com dados: {os.environ["TABLES"]}</li>
+            </ul>
+            <p>Para abrir é precisa a frase de cifra. Os passos para restaurar
+            estão no DEPLOY.md, secção "Backups".</p>
+          """
+          payload = {
+              "from": os.environ["BACKUP_EMAIL_FROM"],
+              "to": [a.strip() for a in os.environ["BACKUP_EMAIL_TO"].split(",") if a.strip()],
+              "subject": f"Backup da base de dados — {day}",
+              "html": html,
+              "attachments": [{
+                  "filename": file,
+                  "content": base64.b64encode(open(file, "rb").read()).decode(),
+              }],
+          }
+          json.dump(payload, open("payload.json", "w"))
+          EOF
+
+          curl -sS --fail-with-body -X POST https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_API_KEY" \
+            -H "Content-Type: application/json" \
+            --data @payload.json
+          echo
+          rm -f payload.json

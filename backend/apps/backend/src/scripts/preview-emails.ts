@@ -4,7 +4,7 @@ import path from "path"
 import { loadEnv } from "@medusajs/framework/utils"
 import { Resend } from "resend"
 
-import { welcomeEmail } from "../subscribers/customer-created"
+import { newAccountEmail, welcomeEmail } from "../subscribers/customer-created"
 import { orderEmails } from "../subscribers/order-placed"
 
 /**
@@ -57,6 +57,15 @@ const sampleOrder = {
 const emails = {
   ...orderEmails(sampleOrder),
   welcome: welcomeEmail({ email: sampleOrder.email, first_name: "Maria" }),
+  "new-account": newAccountEmail(
+    {
+      id: "cus_01JEXAMPLE",
+      email: sampleOrder.email,
+      first_name: "Maria",
+      last_name: "Silva",
+    },
+    "Google"
+  ),
 }
 const recipient = process.argv[2]
 
