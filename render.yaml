@@ -79,12 +79,14 @@ services:
       # Sem estas, os ficheiros vão para o disco local e desaparecem a cada
       # deploy. Ver DEPLOY.md para como criar o bucket e as chaves.
       - key: R2_BUCKET
-        sync: false
+        value: southstore
+      - key: R2_PREFIX
+        value: southstore_images
       - key: R2_ENDPOINT
-        sync: false
+        value: https://7d0fd0bbf28594a33e7de39843f63645.r2.cloudflarestorage.com
+      - key: R2_PUBLIC_URL
+        value: https://images.southstore.net
       - key: R2_ACCESS_KEY_ID
         sync: false
       - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_PUBLIC_URL
         sync: false

@@ -17,6 +17,89 @@ estiver de pé e acessível, **o build do storefront falha**. Daí esta ordem:
 
 ---
 
+## Modo demonstração (sem Stripe)
+
+Para mostrar o site ao dono, sem clientes reais, simplifica-se bastante:
+
+| Passo | Demonstração |
+|---|---|
+| 1. R2 | Igual — para as imagens novas não se perderem entre deploys |
+| 2. Render | Igual, mas sem `STRIPE_*` |
+| 3. DNS `api.` | Igual |
+| 4. Cloudflare | Igual |
+| 5. DNS raiz | Igual |
+| 6. Stripe webhook | **Salta** |
+
+Duas ressalvas:
+
+- **O `NEXT_PUBLIC_STRIPE_KEY` não pode ficar vazio.** O `check-env-variables.js`
+  aborta o build se faltar. Deixa lá a chave `pk_test_` que já tens.
+- **Sem `STRIPE_API_KEY` no backend**, o Medusa usa pagamento manual
+  (`pp_system_default`). O checkout chega ao fim, cria a encomenda e dispara os
+  emails — bom para demonstrar o fluxo completo — mas não cobra nada.
+
+E antes de abrir a clientes: chaves live do Stripe, webhook, R2, e trocar
+`JWT_SECRET`/`COOKIE_SECRET`.
+
+---
+
+## Corrigir os URLs das imagens (obrigatório)
+
+As imagens dos produtos foram carregadas com o backend em `localhost`, e é isso
+que está gravado na base de dados:
+
+```
+http://localhost:9000/static/1784487589691-....png
+```
+
+Fora do teu computador, esses endereços não existem — **a loja apareceria sem
+fotografias nenhumas**. Os ficheiros vão no git e o Medusa serve-os em `/static`,
+por isso basta corrigir o endereço guardado.
+
+Corre isto no **SQL Editor do Supabase**, depois do backend estar no ar.
+
+Primeiro vê o que vai ser alterado:
+
+```sql
+SELECT 'product.thumbnail' AS onde, count(*) FROM product
+WHERE thumbnail LIKE 'http://localhost:9000/static/%'
+UNION ALL
+SELECT 'image.url', count(*) FROM image
+WHERE url LIKE 'http://localhost:9000/static/%'
+UNION ALL
+SELECT 'store.metadata', count(*) FROM store
+WHERE metadata::text LIKE '%http://localhost:9000/static/%';
+```
+
+Se os números fizerem sentido, aplica:
+
+```sql
+UPDATE product
+SET thumbnail = replace(thumbnail,
+      'http://localhost:9000/static/', 'https://api.southstore.net/static/')
+WHERE thumbnail LIKE 'http://localhost:9000/static/%';
+
+UPDATE image
+SET url = replace(url,
+      'http://localhost:9000/static/', 'https://api.southstore.net/static/')
+WHERE url LIKE 'http://localhost:9000/static/%';
+
+-- Imagens do template (hero, about, brands), guardadas no metadata da loja
+UPDATE store
+SET metadata = replace(metadata::text,
+      'http://localhost:9000/static/', 'https://api.southstore.net/static/')::jsonb
+WHERE metadata::text LIKE '%http://localhost:9000/static/%';
+```
+
+> Isto altera dados a sério, e a base é a mesma que usas em desenvolvimento.
+> Depois disto, as imagens deixam de aparecer no teu `localhost` — passam a vir
+> de `api.southstore.net`, o que funciona na mesma desde que o backend esteja no ar.
+
+O `medusa-config.ts` já está configurado para que **novos** uploads usem o
+`MEDUSA_BACKEND_URL` em vez de `localhost`.
+
+---
+
 ## Antes de começar
 
 ### Gerar os segredos
@@ -53,21 +136,29 @@ Basta não as sobrepores com os valores antigos.
 
 Sem isto, as imagens ficam no disco do Render e **desaparecem a cada deploy**.
 
-1. Cloudflare > R2 > **Create bucket**, nome `southstore-media`
-2. No bucket > Settings > **Public access** > liga o acesso público
-   (dá-te um URL `https://pub-xxxx.r2.dev` — guarda-o)
-3. R2 > **Manage API tokens** > Create token, permissão *Object Read & Write*
+1. Cloudflare > R2 > **Create bucket**, nome `southstore`, com uma pasta `southstore_images`
+2. No bucket > Settings > **Custom Domains** > Add > `images.southstore.net`
+   (evita o `pub-xxxx.r2.dev`: a Cloudflare limita-lhe o tráfego e diz que não é
+   para produção)
+3. R2 > **Manage API tokens** > Create token, permissão *Object Read & Write*,
+   limitado ao bucket `southstore`
    → guarda o Access Key ID, o Secret e o endpoint `https://<conta>.r2.cloudflarestorage.com`
+   (o Secret só é mostrado uma vez)
 
-Fica com estes cinco valores, que vão para o Render:
+O bucket e a pasta já estão no `render.yaml`. Os outros quatro preenches tu:
 
 ```
-R2_BUCKET=southstore-media
+R2_BUCKET=southstore
+R2_PREFIX=southstore_images
 R2_ENDPOINT=https://<id-da-conta>.r2.cloudflarestorage.com
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
-R2_PUBLIC_URL=https://pub-xxxx.r2.dev
+R2_PUBLIC_URL=https://images.southstore.net
 ```
+
+Põe estes valores **também no `.env` local** do backend. Assim os uploads feitos
+em desenvolvimento vão para o R2 e o URL gravado na base de dados funciona em
+todo o lado — sem commit das imagens nem deploy.
 
 > As imagens que já tens em `backend/apps/backend/static/` **não migram
 > sozinhas**. Depois do deploy, ou voltas a carregá-las pelo Admin, ou copias
@@ -83,7 +174,8 @@ O ficheiro [`render.yaml`](render.yaml) na raiz já define o serviço.
 2. Ele lê o `render.yaml` e propõe o serviço `southstore-backend`
 3. Preenche as variáveis marcadas como *sync: false*:
    `DATABASE_URL`, `RESEND_API_KEY`, `STRIPE_API_KEY`,
-   `STRIPE_WEBHOOK_SECRET` e as cinco do R2
+   `STRIPE_WEBHOOK_SECRET`, `R2_ACCESS_KEY_ID` e `R2_SECRET_ACCESS_KEY`
+   (os mesmos valores do teu `.env` local)
 4. Deploy
 
 Notas sobre a configuração:

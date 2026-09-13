@@ -31,6 +31,13 @@ const paymentProviders = stripeApiKey
 // em desenvolvimento, mas em produção os ficheiros desaparecem a cada deploy.
 const r2Bucket = process.env.R2_BUCKET
 
+// Pasta dentro do bucket. O provider concatena o prefixo directamente ao nome
+// do ficheiro, por isso a barra final é obrigatória — sem ela os ficheiros
+// iam para a raiz com nomes tipo "southstore_imagesfoto.png".
+const r2Prefix = process.env.R2_PREFIX
+  ? process.env.R2_PREFIX.replace(/^\/+|\/+$/g, '') + '/'
+  : ''
+
 const fileModule = r2Bucket
   ? [
       {
@@ -42,8 +49,10 @@ const fileModule = r2Bucket
               resolve: '@medusajs/medusa/file-s3',
               options: {
                 bucket: r2Bucket,
+                prefix: r2Prefix,
                 endpoint: process.env.R2_ENDPOINT,
-                file_url: process.env.R2_PUBLIC_URL,
+                // O provider junta `${file_url}/${chave}`; uma barra final dava "//".
+                file_url: process.env.R2_PUBLIC_URL?.replace(/\/+$/, ''),
                 access_key_id: process.env.R2_ACCESS_KEY_ID,
                 secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
                 // O R2 não tem ACLs por objecto como a AWS; o acesso público
@@ -56,7 +65,30 @@ const fileModule = r2Bucket
         },
       },
     ]
-  : []
+  : // Sem R2: fica o provider local, mas com o endereço certo. O valor por
+    // omissão é `http://localhost:9000/static`, que ficaria gravado na base de
+    // dados a cada upload e daria imagens partidas fora deste computador.
+    // Atenção: em hosts containerizados o disco é efémero — ficheiros carregados
+    // depois do deploy desaparecem no deploy seguinte. Serve para demonstrações,
+    // não para uma loja a sério.
+    process.env.MEDUSA_BACKEND_URL
+    ? [
+        {
+          resolve: '@medusajs/medusa/file',
+          options: {
+            providers: [
+              {
+                id: 'local',
+                resolve: '@medusajs/medusa/file-local',
+                options: {
+                  backend_url: `${process.env.MEDUSA_BACKEND_URL.replace(/\/$/, '')}/static`,
+                },
+              },
+            ],
+          },
+        },
+      ]
+    : []
 
 module.exports = defineConfig({
   projectConfig: {
