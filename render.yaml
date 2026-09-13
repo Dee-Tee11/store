@@ -16,15 +16,14 @@ services:
     rootDir: backend
     branch: main
 
-    # Instala o workspace, compila, e instala só as dependências de produção
-    # dentro do output do build (.medusa/server), que é o que vai correr.
-    buildCommand: >-
-      npm ci &&
-      npm run build --workspace=@dtc/backend &&
-      cd apps/backend/.medusa/server &&
-      npm install --omit=dev
+    # Instala o workspace a partir do lockfile e compila. Não se faz um segundo
+    # `npm install` dentro de .medusa/server: essa pasta não tem lockfile, por isso
+    # resolvia as versões de novo (diferentes das testadas) e falhava num conflito
+    # de peer deps (@medusajs/draft-order quer @medusajs/ui 4.1.17). O servidor
+    # compilado encontra as dependências em backend/node_modules, quatro níveis acima.
+    buildCommand: npm ci && npm run build --workspace=@dtc/backend
 
-    startCommand: cd apps/backend/.medusa/server && npx medusa start
+    startCommand: cd apps/backend/.medusa/server && ../../../../node_modules/.bin/medusa start
 
     healthCheckPath: /health
 

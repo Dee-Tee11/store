@@ -197,7 +197,7 @@ fazer nada**. Se um dia acrescentares módulos ou modelos, corre à mão na shel
 do Render:
 
 ```bash
-cd apps/backend/.medusa/server && npx medusa db:migrate
+cd apps/backend/.medusa/server && ../../../../node_modules/.bin/medusa db:migrate
 ```
 
 > ⚠️ O backend de produção usa **a mesma base de dados** que o teu ambiente
