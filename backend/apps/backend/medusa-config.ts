@@ -1,6 +1,45 @@
-import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+import {
+  loadEnv,
+  defineConfig,
+  ContainerRegistrationKeys,
+  Modules,
+} from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', __dirname)
+
+// Login com Google para clientes. Tal como o Stripe, o provider só é registado
+// quando há credenciais — sem clientId/clientSecret recusa-se a arrancar.
+// O Google devolve o cliente ao storefront, não ao backend: é lá que o código
+// é trocado por um token (ver storefront/src/app/[countryCode]/(main)/auth/google).
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+
+const googleCallbackUrl =
+  process.env.GOOGLE_CALLBACK_URL ||
+  (process.env.STOREFRONT_URL
+    ? `${process.env.STOREFRONT_URL.replace(/\/+$/, '')}/auth/google/callback`
+    : undefined)
+
+const authProviders = [
+  // Ao declarar o módulo de auth deixa de valer a lista por omissão, por isso
+  // o emailpass tem de estar aqui — senão caem o login do Admin e o registo normal.
+  {
+    resolve: '@medusajs/medusa/auth-emailpass',
+    id: 'emailpass',
+  },
+  ...(googleClientId
+    ? [
+        {
+          resolve: '@medusajs/medusa/auth-google',
+          id: 'google',
+          options: {
+            clientId: googleClientId,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackUrl: googleCallbackUrl,
+          },
+        },
+      ]
+    : []),
+]
 
 // O SDK do Stripe rebenta no arranque se receber uma chave vazia, por isso o
 // provider só é registado quando STRIPE_API_KEY existe. Sem ele, o módulo de
@@ -99,9 +138,25 @@ module.exports = defineConfig({
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET,
       cookieSecret: process.env.COOKIE_SECRET,
+      // Sem isto qualquer conta Google conseguia pedir um token de administrador
+      // (sem acesso a nada, mas não há razão para o permitir). O Admin continua
+      // só com email e password.
+      authMethodsPerActor: {
+        user: ['emailpass'],
+        customer: ['emailpass', 'google'],
+      },
     }
   },
   modules: [
+    {
+      resolve: '@medusajs/medusa/auth',
+      // O OAuth guarda o `state` entre o redirect e o callback na cache. Sem
+      // Redis é a cache em memória: um restart a meio do login obriga a repetir.
+      dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER],
+      options: {
+        providers: authProviders,
+      },
+    },
     {
       resolve: '@medusajs/medusa/payment',
       options: {

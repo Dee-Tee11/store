@@ -4,10 +4,11 @@ import path from "path"
 import { loadEnv } from "@medusajs/framework/utils"
 import { Resend } from "resend"
 
+import { welcomeEmail } from "../subscribers/customer-created"
 import { orderEmails } from "../subscribers/order-placed"
 
 /**
- * Escreve os emails da encomenda em HTML com dados de exemplo, para os abrires
+ * Escreve os emails da encomenda e o de boas-vindas em HTML com dados de exemplo, para os abrires
  * no browser e afinares o visual sem teres de fazer uma encomenda a sério.
  *
  *   npx ts-node --swc src/scripts/preview-emails.ts
@@ -53,7 +54,10 @@ const sampleOrder = {
   shipping_methods: [{ name: "CTT Expresso" }],
 }
 
-const emails = orderEmails(sampleOrder)
+const emails = {
+  ...orderEmails(sampleOrder),
+  welcome: welcomeEmail({ email: sampleOrder.email, first_name: "Maria" }),
+}
 const recipient = process.argv[2]
 
 async function main() {

@@ -8,6 +8,7 @@ import {
   isExternalImage,
 } from "@lib/data/template-images"
 import { LoginForm } from "@modules/auth/components/LoginForm"
+import { GoogleLoginButton } from "@modules/auth/components/GoogleLoginButton"
 import { LocalizedLink } from "@/components/LocalizedLink"
 import { Reveal } from "@/components/Reveal"
 
@@ -55,6 +56,10 @@ export default async function LoginPage({
         <h1 className="text-xl md:text-2xl mb-10 md:mb-16">
           Welcome back to South Store!
         </h1>
+        <GoogleLoginButton
+          className="mb-6 md:mb-8"
+          redirectUrl={`/${countryCode}/account`}
+        />
         <LoginForm
           className="mb-10 md:mb-15"
           redirectUrl={`/${countryCode}/account`}

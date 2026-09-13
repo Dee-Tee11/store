@@ -2,6 +2,7 @@ import Image from "next/image"
 import { TEMPLATE_IMAGE_DEFAULTS } from "@lib/data/template-images"
 import { LocalizedLink } from "@/components/LocalizedLink"
 import { Input } from "@/components/Forms"
+import { GoogleLoginButton } from "@modules/auth/components/GoogleLoginButton"
 import { SubmitButton } from "@modules/common/components/submit-button"
 
 export default function RegisterLoadingPage() {
@@ -18,6 +19,7 @@ export default function RegisterLoadingPage() {
         <h1 className="text-xl md:text-2xl mb-10 md:mb-16">
           Hey, welcome to South Store!
         </h1>
+        <GoogleLoginButton className="mb-6 md:mb-8" isDisabled />
         <form className="flex flex-col gap-6 md:gap-8 mb-8 md:mb-16">
           <div className="flex gap-4 md:gap-6">
             <Input

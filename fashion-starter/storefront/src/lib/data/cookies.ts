@@ -29,6 +29,26 @@ export const removeAuthToken = async () => {
   })
 }
 
+// O Medusa só confirma que o `state` do OAuth existe, não que foi este browser
+// a pedi-lo. Sem guardar aqui o nosso, um link de callback gerado por outra
+// pessoa iniciava sessão na conta dela (login CSRF).
+export const setOAuthState = async (state: string) => {
+  return (await cookies()).set("_medusa_oauth_state", state, {
+    maxAge: 60 * 20,
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  })
+}
+
+export const getOAuthState = async () => {
+  return (await cookies()).get("_medusa_oauth_state")?.value
+}
+
+export const removeOAuthState = async () => {
+  return (await cookies()).set("_medusa_oauth_state", "", { maxAge: -1 })
+}
+
 export const getCartId = async () => {
   return (await cookies()).get("_medusa_cart_id")?.value
 }

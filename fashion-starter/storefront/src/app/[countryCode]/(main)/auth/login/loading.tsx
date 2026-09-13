@@ -4,6 +4,7 @@ import { TEMPLATE_IMAGE_DEFAULTS } from "@lib/data/template-images"
 import { LocalizedLink } from "@/components/LocalizedLink"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Forms"
+import { GoogleLoginButton } from "@modules/auth/components/GoogleLoginButton"
 
 export default async function LoginLoadingPage() {
   return (
@@ -19,6 +20,7 @@ export default async function LoginLoadingPage() {
         <h1 className="text-xl md:text-2xl mb-10 md:mb-16">
           Welcome back to South Store!
         </h1>
+        <GoogleLoginButton className="mb-6 md:mb-8" isDisabled />
         <form className="flex flex-col gap-6 md:gap-8 mb-8 md:mb-16">
           <Input
             placeholder="Email"

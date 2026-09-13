@@ -8,6 +8,7 @@ import {
   isExternalImage,
 } from "@lib/data/template-images"
 import { SignUpForm } from "@modules/auth/components/SignUpForm"
+import { GoogleLoginButton } from "@modules/auth/components/GoogleLoginButton"
 import { LocalizedLink } from "@/components/LocalizedLink"
 import { Reveal } from "@/components/Reveal"
 
@@ -21,10 +22,11 @@ export default async function RegisterPage({
 }: {
   params: Promise<{ countryCode: string }>
 }) {
+  const { countryCode } = await params
   const customer = await getCustomer().catch(() => null)
 
   if (customer) {
-    redirect(`/${(await params).countryCode}/account`)
+    redirect(`/${countryCode}/account`)
   }
 
   const { auth_image: authImage } = await getTemplateImages()
@@ -54,6 +56,10 @@ export default async function RegisterPage({
         <h1 className="text-xl md:text-2xl mb-10 md:mb-16">
           Hey, welcome to South Store!
         </h1>
+        <GoogleLoginButton
+          className="mb-6 md:mb-8"
+          redirectUrl={`/${countryCode}/account`}
+        />
         <SignUpForm />
         <p className="text-grayscale-500">
           Already have an account? No worries, just{" "}

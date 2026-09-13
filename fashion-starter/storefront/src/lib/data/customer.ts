@@ -11,6 +11,9 @@ import {
   setAuthToken,
   removeAuthToken,
   getCartId,
+  setOAuthState,
+  getOAuthState,
+  removeOAuthState,
 } from "@lib/data/cookies"
 import {
   customerAddressSchema,
@@ -136,6 +139,121 @@ export async function login(formData: z.infer<typeof loginFormSchema>) {
     return {
       success: false,
       message: error instanceof Error ? error.message : `${error}`,
+    }
+  }
+}
+
+export async function startGoogleLogin(): Promise<
+  { success: true; location: string } | { success: false; error: string }
+> {
+  try {
+    const result = await sdk.auth.login("customer", "google", {})
+    const location = typeof result === "object" ? result.location : undefined
+    const state = location && new URL(location).searchParams.get("state")
+
+    if (!location || !state) {
+      throw new Error("Google login did not return a redirect with a state")
+    }
+
+    await setOAuthState(state)
+
+    return { success: true, location }
+  } catch (error) {
+    console.error("startGoogleLogin:", error)
+
+    return {
+      success: false,
+      error: "Google sign-in isn't available right now. Please try again later.",
+    }
+  }
+}
+
+/**
+ * O JWT vem directamente do backend, por isso só precisamos de o ler — não de
+ * validar a assinatura. O nome pode ter acentos, daí o TextDecoder.
+ */
+function decodeToken(token: string): {
+  actor_id?: string
+  user_metadata?: {
+    email?: string
+    given_name?: string
+    family_name?: string
+  }
+} {
+  const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
+  const bytes = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0))
+
+  return JSON.parse(new TextDecoder().decode(bytes))
+}
+
+export async function completeGoogleLogin(query: {
+  code: string
+  state: string
+}): Promise<{ success: true } | { success: false; error: string }> {
+  // O `state` é de uso único: tem de ser o que este browser guardou ao
+  // carregar no botão. Um callback que não começou aqui é recusado.
+  const expectedState = await getOAuthState()
+  await removeOAuthState()
+
+  if (!expectedState || expectedState !== query.state) {
+    return {
+      success: false,
+      error: "Your Google sign-in session expired. Please try again.",
+    }
+  }
+
+  try {
+    let token = await sdk.auth.callback("customer", "google", query)
+    const { actor_id, user_metadata } = decodeToken(token)
+
+    // Primeira vez com esta conta Google: a identidade foi criada no callback,
+    // mas ainda não há cliente. Cria-o (é isto que dispara o email de
+    // boas-vindas) e troca o token por um que já traz o actor_id.
+    if (!actor_id) {
+      const authorization = { authorization: `Bearer ${token}` }
+
+      await sdk.store.customer.create(
+        {
+          email: user_metadata?.email ?? "",
+          first_name: user_metadata?.given_name,
+          last_name: user_metadata?.family_name,
+        },
+        {},
+        authorization
+      )
+
+      token = await sdk.auth.refresh(authorization)
+    }
+
+    await setAuthToken(token)
+    revalidateTag("customer")
+
+    const cartId = await getCartId()
+    if (cartId) {
+      await sdk.store.cart.transferCart(cartId, {}, await getAuthHeaders())
+      revalidateTag("cart")
+    }
+
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : `${error}`
+
+    // Quem se registou com password e depois tenta o Google cai aqui. Não
+    // juntamos as contas automaticamente: o registo com password não confirma
+    // o email, e alguém podia criar a conta primeiro para a apanhar depois.
+    if (message.includes("already has an account")) {
+      return {
+        success: false,
+        error:
+          "There's already an account with this email. Please log in with your password.",
+      }
+    }
+
+    console.error("completeGoogleLogin:", error)
+
+    return {
+      success: false,
+      error: "We couldn't sign you in with Google. Please try again.",
     }
   }
 }

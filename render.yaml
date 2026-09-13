@@ -65,9 +65,17 @@ services:
         value: South Store
       - key: MEDUSA_BACKEND_URL
         value: https://api.southstore.net
-      # Usado no link do email de recuperação de password.
+      # Usado nos links dos emails e no callback do login com Google.
       - key: STOREFRONT_URL
         value: https://southstore.net
+
+      # --- Login com Google ------------------------------------------------
+      # Redirect URI autorizado no Google Cloud Console:
+      #   https://southstore.net/auth/google/callback
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
 
       # --- Pagamentos (Stripe) ---------------------------------------------
       # Chaves LIVE. O webhook aponta para:
