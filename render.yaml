@@ -8,7 +8,10 @@ services:
   - type: web
     name: southstore-backend
     runtime: node
-    plan: starter # o plano grátis adormece ao fim de 15 min; numa loja isso não serve
+    # Gratuito para a demonstração: não pede cartão, mas adormece ao fim de
+    # 15 min sem visitas (o primeiro pedido demora ~1 min) e tem só 512 MB.
+    # Antes de abrir a clientes, mudar para `starter`.
+    plan: free
     region: frankfurt # mais perto de PT e do Supabase eu-west
     rootDir: backend
     branch: main
