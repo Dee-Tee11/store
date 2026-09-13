@@ -12,6 +12,10 @@ const nextConfig = {
     staticGenerationMaxConcurrency: 1,
   },
   images: {
+    // O optimizador só aceita as qualidades desta lista (por omissão só 75) e
+    // responde 400 às outras. O Thumbnail pede 50 — sem ele aqui, as fotos das
+    // listagens de produtos não aparecem.
+    qualities: [50, 75],
     remotePatterns: [
       {
         protocol: "http",

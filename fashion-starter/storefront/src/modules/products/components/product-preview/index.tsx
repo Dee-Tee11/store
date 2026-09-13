@@ -18,7 +18,10 @@ export default function ProductPreview({
       (cheapestPrice?.original_price_number || 0)
 
   return (
-    <LocalizedLink href={`/products/${product.handle}`}>
+    // Sem prefetch: numa listagem o Next gerava todas as páginas de produto em
+    // paralelo, e cada uma chama o backend várias vezes — o Render entupia e
+    // o clique do cliente ficava na fila atrás desses pedidos.
+    <LocalizedLink href={`/products/${product.handle}`} prefetch={false}>
       <Thumbnail
         thumbnail={product.thumbnail}
         images={product.images}
