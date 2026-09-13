@@ -12,6 +12,7 @@ import { UiCloseButton, UiDialog, UiDialogTrigger } from "@/components/Dialog"
 import { UiModal, UiModalOverlay } from "@/components/ui/Modal"
 import { Icon } from "@/components/Icon"
 import { LoginForm } from "@modules/auth/components/LoginForm"
+import { GoogleLoginButton } from "@modules/auth/components/GoogleLoginButton"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { useCustomer } from "hooks/customer"
 import { useSetEmail } from "hooks/cart"
@@ -75,6 +76,12 @@ const Email = ({
                     <UiModal className="relative max-w-108">
                       <UiDialog>
                         <p className="text-md mb-10">Log in</p>
+                        {/* Não precisa do handleCheckout: ao entrar, o carrinho
+                            é transferido para o cliente e fica com o email dele. */}
+                        <GoogleLoginButton
+                          className="mb-6 md:mb-8"
+                          redirectUrl={`/${countryCode}/checkout?step=delivery`}
+                        />
                         <LoginForm
                           redirectUrl={`/${countryCode}/checkout?step=delivery`}
                           handleCheckout={onSubmit}

@@ -3,8 +3,9 @@
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 
-// Safety net in case the navigation never resolves (e.g. the route only
-// changes the query string): the transition must not stay frozen.
+// How long the page may stay frozen waiting for the next route. Navigations
+// that take longer (a slow backend, or only the query string changing) skip
+// the slide rather than keep the page frozen.
 const TRANSITION_TIMEOUT = 700
 
 /**
@@ -74,11 +75,20 @@ export const ViewTransitions: React.FC = () => {
 
       event.preventDefault()
 
-      document.startViewTransition(
+      // A previous slow navigation may have handed over to the mount animation.
+      root.dataset.viewTransitions = "true"
+
+      const transition = document.startViewTransition(
         () =>
           new Promise<void>((resolve) => {
             const timeout = window.setTimeout(() => {
+              // The next page isn't in the DOM yet. Resolving the transition
+              // now would slide the current page into itself and then swap to
+              // the new one with no animation, so skip the slide instead and
+              // let PageTransition's mount animation run when the page lands.
               finishNavigation.current = null
+              transition.skipTransition()
+              delete root.dataset.viewTransitions
               resolve()
             }, TRANSITION_TIMEOUT)
 
