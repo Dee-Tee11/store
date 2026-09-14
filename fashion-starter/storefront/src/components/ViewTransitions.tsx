@@ -4,8 +4,8 @@ import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 
 // How long the page may stay frozen waiting for the next route. Navigations
-// that take longer (a slow backend, or only the query string changing) skip
-// the slide rather than keep the page frozen.
+// that take longer (e.g. a slow backend) skip the slide rather than keep the
+// page frozen.
 const TRANSITION_TIMEOUT = 700
 
 /**
@@ -19,8 +19,10 @@ export const ViewTransitions: React.FC = () => {
   const finishNavigation = React.useRef<(() => void) | null>(null)
 
   // The new route is in the DOM by the time this runs, which is what the
-  // view transition is waiting for.
-  React.useEffect(() => {
+  // view transition is waiting for. A layout effect runs in the same task as
+  // the commit, so the timeout can't fire between the two and skip a
+  // navigation that already landed.
+  React.useLayoutEffect(() => {
     const finish = finishNavigation.current
 
     if (finish) {
@@ -64,11 +66,12 @@ export const ViewTransitions: React.FC = () => {
 
       const url = new URL(anchor.href, window.location.href)
 
-      // Leave external links, and anchors within the current page, alone.
+      // Leave external links, and links that keep the current pathname (only
+      // the query string or hash changes), alone: the pathname effect above
+      // never fires for those, so the page would just freeze until the timeout.
       if (
         url.origin !== window.location.origin ||
-        (url.pathname === window.location.pathname &&
-          url.search === window.location.search)
+        url.pathname === window.location.pathname
       ) {
         return
       }
@@ -87,6 +90,12 @@ export const ViewTransitions: React.FC = () => {
               // the new one with no animation, so skip the slide instead and
               // let PageTransition's mount animation run when the page lands.
               finishNavigation.current = null
+              // Dropping the attribute also re-enables the mount animation on
+              // the page still on screen, replaying its fade-in — a flash
+              // before the next page arrives. Keep that page still.
+              document
+                .querySelector<HTMLElement>(".page-transition")
+                ?.style.setProperty("animation", "none")
               transition.skipTransition()
               delete root.dataset.viewTransitions
               resolve()
