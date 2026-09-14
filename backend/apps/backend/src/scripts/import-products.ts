@@ -35,8 +35,8 @@ type ProdutoImport = {
   categoria: string
   /** Em euros (o Medusa 2 guarda o valor na unidade principal, não em cêntimos). */
   preco: number | null
-  opcao: { titulo: string; valor: string }
-  stock: number
+  /** Uma variante por valor da opção (p. ex. um tamanho), cada uma com o seu stock. */
+  opcao: { titulo: string; variantes: { valor: string; stock: number }[] }
   /** Nomes dos ficheiros na pasta; o primeiro é a foto principal. */
   fotos: string[]
 }
@@ -48,8 +48,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Mala de ombro Coach com aba e corrente dourada.",
     categoria: "Malas",
     preco: 90,
-    opcao: { titulo: "Tamanho", valor: "Único" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "Único", stock: 1 }] },
     fotos: ["coach_4.jpg", "coach_3.jpg", "coach_2.jpg", "coach_1.jpg"],
   },
   {
@@ -58,8 +57,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Mala de ombro Yves Saint Laurent em pele envernizada preta.",
     categoria: "Malas",
     preco: 90,
-    opcao: { titulo: "Tamanho", valor: "Único" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "Único", stock: 1 }] },
     fotos: ["ysl_1.jpg", "ysl_2.jpg"],
   },
   {
@@ -68,8 +66,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Mala Gucci em lona GG.",
     categoria: "Malas",
     preco: 90,
-    opcao: { titulo: "Tamanho", valor: "Único" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "Único", stock: 1 }] },
     fotos: ["gucci_mini_6.jpg", "gucci_mini_5.jpg", "gucci_mini_7.jpg", "gucci_mini_4.jpg"],
   },
   {
@@ -78,8 +75,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Casaco puffer Corteiz preto com forro amarelo. Tamanho M.",
     categoria: "Casacos",
     preco: 100,
-    opcao: { titulo: "Tamanho", valor: "M" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "M", stock: 1 }] },
     fotos: ["corteiz_m_2.jpg", "corteiz_m_1.jpg", "corteiz_m_4.jpg"],
   },
   {
@@ -88,8 +84,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Casaco puffer Nike x Nocta preto. Tamanho M.",
     categoria: "Casacos",
     preco: 100,
-    opcao: { titulo: "Tamanho", valor: "M" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "M", stock: 1 }] },
     fotos: ["nocta_m_2.jpg", "nocta_m_3.jpg", "nocta_m_1.jpg"],
   },
   {
@@ -98,8 +93,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Fato de treino Nike x Nocta Tech Fleece preto, casaco e calças. Tamanho M.",
     categoria: "Casacos",
     preco: 100,
-    opcao: { titulo: "Tamanho", valor: "M" },
-    stock: 1,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "M", stock: 1 }] },
     fotos: ["nocta_tracksuit_1.jpg", "nocta_tracksuit_2.jpg"],
   },
   {
@@ -108,8 +102,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Coluna portátil JBL Boombox 3.",
     categoria: "Colunas",
     preco: 100,
-    opcao: { titulo: "Modelo", valor: "Boombox 3" },
-    stock: 3,
+    opcao: { titulo: "Modelo", variantes: [{ valor: "Boombox 3", stock: 3 }] },
     fotos: [
       "jbl_boombox3_3.jpg",
       "jbl_boombox3_2.jpg",
@@ -123,8 +116,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Eau de Parfum Azzaro Wanted by Night, 50 ml.",
     categoria: "Perfumes",
     preco: 50,
-    opcao: { titulo: "Volume", valor: "50 ml" },
-    stock: 1,
+    opcao: { titulo: "Volume", variantes: [{ valor: "50 ml", stock: 1 }] },
     fotos: [
       "azzaro_wanted_night_1.jpg",
       "azzaro_wanted_night_2.jpg",
@@ -137,8 +129,7 @@ const PRODUTOS: ProdutoImport[] = [
     descricao: "Eau de Parfum Xerjoff Erba Pura, 50 ml.",
     categoria: "Perfumes",
     preco: 80,
-    opcao: { titulo: "Volume", valor: "50 ml" },
-    stock: 1,
+    opcao: { titulo: "Volume", variantes: [{ valor: "50 ml", stock: 1 }] },
     fotos: ["erba_pura_2.jpg", "erba_pura_1.jpg"],
   },
   {
@@ -148,11 +139,72 @@ const PRODUTOS: ProdutoImport[] = [
     categoria: "Perfumes",
     // Sem preço o produto é ignorado — preencher antes de correr.
     preco: null,
-    opcao: { titulo: "Volume", valor: "50 ml" },
-    stock: 1,
+    opcao: { titulo: "Volume", variantes: [{ valor: "50 ml", stock: 1 }] },
     fotos: ["erba_gold_1.jpg", "erba_gold_2.jpg"],
   },
+  {
+    handle: "nike-air-force-1-syna-world",
+    titulo: "Nike Air Force 1 Syna World",
+    descricao:
+      "Sapatilhas Nike Air Force 1 Syna World, de Central Cee, em pele envernizada preta e azul com swoosh amarelo. Tamanho 41.",
+    categoria: "Sapatilhas",
+    preco: 90,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "41", stock: 1 }] },
+    fotos: [
+      "af1_synaworld_4.jpg",
+      "af1_synaworld_3.jpg",
+      "af1_synaworld_2.jpg",
+      "af1_synaworld_1.jpg",
+    ],
+  },
+  {
+    handle: "nike-air-force-1-brancas",
+    titulo: "Nike Air Force 1 Brancas",
+    descricao: "Sapatilhas Nike Air Force 1 totalmente brancas.",
+    categoria: "Sapatilhas",
+    preco: 70,
+    opcao: {
+      titulo: "Tamanho",
+      variantes: [
+        { valor: "41", stock: 2 },
+        { valor: "42", stock: 2 },
+      ],
+    },
+    fotos: ["af1_branco_1.jpg", "af1_branco_2.jpg", "af1_branco_3.jpg"],
+  },
+  {
+    handle: "nike-mind-001",
+    titulo: "Nike Mind 001",
+    descricao:
+      "Mules Nike Mind 001 verde-água, com os nódulos amarelos na palmilha. Tamanho 41, mas calça pequeno.",
+    categoria: "Sapatilhas",
+    preco: 80,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "41", stock: 1 }] },
+    fotos: ["nike_mind_4.jpg", "nike_mind_1.jpg", "nike_mind_2.jpg", "nike_mind_3.jpg"],
+  },
+  {
+    handle: "nike-mind-001-branco",
+    titulo: "Nike Mind 001 Branco",
+    descricao:
+      "Mules Nike Mind 001 brancas, com os nódulos laranja na palmilha. Tamanho 41, mas calça pequeno.",
+    categoria: "Sapatilhas",
+    preco: 80,
+    opcao: { titulo: "Tamanho", variantes: [{ valor: "41", stock: 1 }] },
+    fotos: ["nike_mind_branco_1.jpg", "nike_mind_branco_2.jpg", "nike_mind_branco_3.jpg"],
+  },
+  {
+    handle: "apple-airpods-max",
+    titulo: "Apple AirPods Max",
+    descricao: "Auscultadores Apple AirPods Max na cor luz das estrelas, com Smart Case.",
+    categoria: "Tecnologia",
+    preco: 140,
+    opcao: { titulo: "Cor", variantes: [{ valor: "Luz das estrelas", stock: 1 }] },
+    fotos: ["airpods_max_3.jpg", "airpods_max_2.jpg", "airpods_max_1.jpg"],
+  },
 ]
+
+const descreverVariantes = (p: ProdutoImport) =>
+  p.opcao.variantes.map((v) => `${v.valor} (stock ${v.stock})`).join(", ")
 
 export default async function importProducts({ container, args }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -249,7 +301,7 @@ export default async function importProducts({ container, args }: ExecArgs) {
     }
     for (const p of aImportar) {
       logger.info(
-        `+ ${p.titulo} — ${p.preco}€ — ${p.categoria} — ${p.opcao.valor} — stock ${p.stock} — ${p.fotos.length} fotos`
+        `+ ${p.titulo} — ${p.preco}€ — ${p.categoria} — ${descreverVariantes(p)} — ${p.fotos.length} fotos`
       )
     }
     return
@@ -277,7 +329,8 @@ export default async function importProducts({ container, args }: ExecArgs) {
       },
     })
 
-    let variantId: string
+    const { variantes } = p.opcao
+    let variantIds: string[]
     try {
       const { result } = await createProductsWorkflow(container).run({
         input: {
@@ -291,23 +344,24 @@ export default async function importProducts({ container, args }: ExecArgs) {
               shipping_profile_id: shippingProfile.id,
               thumbnail: ficheiros[0].url,
               images: ficheiros.map((f) => ({ url: f.url })),
-              options: [{ title: p.opcao.titulo, values: [p.opcao.valor] }],
-              variants: [
-                {
-                  title: p.opcao.valor,
-                  sku: p.handle.toUpperCase(),
-                  manage_inventory: true,
-                  allow_backorder: false,
-                  options: { [p.opcao.titulo]: p.opcao.valor },
-                  prices: [{ amount: p.preco!, currency_code: "eur" }],
-                },
-              ],
+              options: [{ title: p.opcao.titulo, values: variantes.map((v) => v.valor) }],
+              variants: variantes.map((v) => ({
+                title: v.valor,
+                // Com uma só variante o SKU é o handle, como nos produtos já importados.
+                sku: (variantes.length > 1 ? `${p.handle}-${v.valor}` : p.handle)
+                  .replace(/\s+/g, "-")
+                  .toUpperCase(),
+                manage_inventory: true,
+                allow_backorder: false,
+                options: { [p.opcao.titulo]: v.valor },
+                prices: [{ amount: p.preco!, currency_code: "eur" }],
+              })),
               sales_channels: [{ id: salesChannel.id }],
             },
           ],
         },
       })
-      variantId = result[0].variants[0].id
+      variantIds = result[0].variants.map((v) => v.id)
     } catch (e) {
       // Não deixar fotos órfãs no bucket se o produto não chegou a ser criado.
       await deleteFilesWorkflow(container).run({
@@ -316,32 +370,35 @@ export default async function importProducts({ container, args }: ExecArgs) {
       throw e
     }
 
-    const {
-      data: [variant],
-    } = await query.graph({
+    const { data: variants } = await query.graph({
       entity: "product_variant",
-      fields: ["inventory_items.inventory_item_id"],
-      filters: { id: variantId },
+      fields: ["title", "inventory_items.inventory_item_id"],
+      filters: { id: variantIds },
     })
-    const inventoryItemId = variant.inventory_items?.[0]?.inventory_item_id
-    if (!inventoryItemId) {
-      logger.warn(`! ${p.handle}: criado, mas sem inventory item — acerta o stock no Admin`)
-      continue
+
+    const niveis = variantes.flatMap((v) => {
+      const inventoryItemId = variants.find((vr) => vr.title === v.valor)?.inventory_items?.[0]
+        ?.inventory_item_id
+      if (!inventoryItemId) {
+        logger.warn(`! ${p.handle} (${v.valor}): criado, mas sem inventory item — acerta o stock no Admin`)
+        return []
+      }
+      return [
+        {
+          inventory_item_id: inventoryItemId,
+          location_id: stockLocation.id,
+          stocked_quantity: v.stock,
+        },
+      ]
+    })
+
+    if (niveis.length) {
+      await createInventoryLevelsWorkflow(container).run({
+        input: { inventory_levels: niveis },
+      })
     }
 
-    await createInventoryLevelsWorkflow(container).run({
-      input: {
-        inventory_levels: [
-          {
-            inventory_item_id: inventoryItemId,
-            location_id: stockLocation.id,
-            stocked_quantity: p.stock,
-          },
-        ],
-      },
-    })
-
-    logger.info(`+ ${p.titulo} — ${p.preco}€ — stock ${p.stock}`)
+    logger.info(`+ ${p.titulo} — ${p.preco}€ — ${descreverVariantes(p)}`)
   }
 
   logger.info("Importação concluída.")
